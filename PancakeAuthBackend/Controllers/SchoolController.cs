@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query.Internal;
 using PancakeAuthBackend.Data;
 using PancakeAuthBackend.Services;
@@ -119,9 +121,19 @@ namespace PancakeAuthBackend.Controllers {
             }
 
             var studentList = new List<StudentDTO>(students);
-            return await _schoolService.AddStudents(studentList, schoolName)
-                ? new OkObjectResult("Student Added Successfully")
-                : new BadRequestObjectResult("Students could not be added. Provide a correct formatted JSON.");
+            try {
+                return await _schoolService.AddStudents(studentList, schoolName)
+              ? new OkObjectResult("Student Added Successfully")
+              : new BadRequestObjectResult("Students could not be added. Provide a correct formatted JSON.");
+            }
+            catch (DbUpdateException ex) {
+                // Handle the exception
+                if (ex.InnerException is SqlException sqlEx && sqlEx.Number == 2601) {
+                    string errorMessage = $"Failed: {sqlEx.Message}";
+                    return new BadRequestObjectResult(errorMessage);
+                }
+                return new BadRequestObjectResult("Students could not be added. Constraints violated");
+            }
         }
 
 

@@ -21,6 +21,48 @@ namespace PancakeAuthBackend.Data {
             foreach (var relationship in modelBuilder.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys())) {
                 relationship.DeleteBehavior = DeleteBehavior.Restrict;
             }
+
+
+            //impose unique contraints
+            
+            //student model
+            modelBuilder.Entity<Student>()
+               .HasIndex(student => student.StudentUID)
+               .IsUnique();
+
+            modelBuilder.Entity<Student>()
+              .HasIndex(student => student.Email)
+              .IsUnique();
+
+            modelBuilder.Entity<Student>()
+              .HasIndex(student => student.PhoneNumber)
+              .IsUnique();
+
+
+            //school model
+            modelBuilder.Entity<School>()
+             .HasIndex(school => school.Name)
+             .IsUnique();
+
+            //subject model
+            modelBuilder.Entity<Subject>()
+             .HasIndex(subject => subject.Name)
+             .IsUnique();
+
+            //subscription model
+            modelBuilder.Entity<Subscription>()
+             .HasIndex(subscription => subscription.Name)
+             .IsUnique();
+
+            //Grade model
+            modelBuilder.Entity<Grade>()
+            .HasIndex(grade => grade.Name)
+            .IsUnique();
+
+            //Chapter Model
+            modelBuilder.Entity<Chapter>()
+            .HasIndex(chapter => chapter.Title)
+            .IsUnique();
         }
     }
 }

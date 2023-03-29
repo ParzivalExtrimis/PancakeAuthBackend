@@ -18,7 +18,6 @@ namespace PancakeAuthBackend.Services {
         List<Payment> GetSchoolPaymentsByPage(string schoolName, int pageIndex, int pageSize);
 
         //POST services 
-        //TODO- Check that objs don't already exist in the db, only subs available in subscript should be addable
         Task<bool> AddStudents(List<StudentDTO> studentObjects, string schoolName);
         Task<bool> AddBatch(BatchDTO batchObj, string schoolName);
     }

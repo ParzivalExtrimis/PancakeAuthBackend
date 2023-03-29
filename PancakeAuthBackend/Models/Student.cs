@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 namespace PancakeAuthBackend.Models {
     public class Student {

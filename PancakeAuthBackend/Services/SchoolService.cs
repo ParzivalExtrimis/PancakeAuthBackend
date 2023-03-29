@@ -185,14 +185,22 @@ namespace PancakeAuthBackend.Services {
         List<Payment> ISchoolService.GetSchoolPayments(string schoolName) {
             var school = InitSchool(schoolName);
             var payments = new List<Payment>();
-            payments = _context.Payments.Where(payment => payment.SchoolId == school!.Id).ToList();
+            payments = _context.Payments
+                .Where(payment => payment.SchoolId == school!.Id)
+                .OrderByDescending(payment => payment.Id)
+                .ToList();
             return payments;
         }
 
         List<Payment> ISchoolService.GetSchoolPaymentsByPage(string schoolName, int pageIndex, int pageSize) {
             var school = InitSchool(schoolName);
             var payments = new List<Payment>();
-            payments = _context.Payments.Where(payment => payment.SchoolId == school!.Id).Skip((pageIndex - 1) * pageSize).Take(pageSize).ToList();
+            payments = _context.Payments
+                .Where(payment => payment.SchoolId == school!.Id)
+                .OrderByDescending(payment => payment.Id)
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
             return payments;
         }
 
@@ -226,6 +234,7 @@ namespace PancakeAuthBackend.Services {
                     SchoolId = sSchool.Id
                 };
                 studentList.Add(s);
+
             }
             await _context.Students.AddRangeAsync(studentList);
             await _context.SaveChangesAsync();
