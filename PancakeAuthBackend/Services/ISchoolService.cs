@@ -20,5 +20,12 @@ namespace PancakeAuthBackend.Services {
         //POST services 
         Task<bool> AddStudents(List<StudentDTO> studentObjects, string schoolName);
         Task<bool> AddBatch(BatchDTO batchObj, string schoolName);
+
+        //PUT servics
+        Task<bool> EditStudent(StudentDTO studentObj, string schoolName);
+        Task<bool> EditBatch(List<string> subjects, string batchName, string schoolName);
+
+        //DELETE services
+        Task<bool> DeleteStudent(string SUID, string schoolName);
     }
 }

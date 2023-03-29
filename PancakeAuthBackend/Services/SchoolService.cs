@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using PancakeAuthBackend.Models;
 using System.Collections.Generic;
 
 namespace PancakeAuthBackend.Services {
@@ -16,6 +17,12 @@ namespace PancakeAuthBackend.Services {
 
         private async Task<Subject?> GetSubjectByName(string name) 
             => await _context.Subjects.FirstOrDefaultAsync(subject => subject.Name == name);
+
+        private Task<Subject?> GetSubjectByNameWithBatch(string name)
+            => _context.Subjects
+            .Include(subject =>  subject.Batches)
+            .FirstOrDefaultAsync(subject => subject.Name == name);
+
 
         //********************************************************************************
 
@@ -259,7 +266,7 @@ namespace PancakeAuthBackend.Services {
                 return false;
             }
 
-            // Add to Student Contexted object and make a list of them
+            // Make new batch from DTO
             var batch = new Batch {
                 Name = batchObj.Name,
                 Grade = Grade,
@@ -270,6 +277,89 @@ namespace PancakeAuthBackend.Services {
             };
 
             await _context.Batches.AddAsync(batch);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        async Task<bool> ISchoolService.EditStudent(StudentDTO studentObj, string schoolName) {
+            var s = await _context.Students.FirstOrDefaultAsync(s => 
+                s.Name == studentObj.Name
+             || s.StudentUID == studentObj.StudentUID  
+             || s.Email == studentObj.Email);
+
+            if(s == null) { 
+                return false;
+            }
+            //make new student from DTO
+            var sGrade = await _context.Grades.FirstOrDefaultAsync(grade => grade.Name == studentObj.Grade);
+            var SBatch = await _context.Batches.FirstOrDefaultAsync(batch => batch.Name == studentObj.Batch);
+            var sSchool = await _context.Schools.FirstOrDefaultAsync(school => school.Name == schoolName);
+
+            if (sGrade == null || SBatch == null || sSchool == null) {
+                return false;
+            }
+            var student = new Student {
+                StudentUID = studentObj.StudentUID,
+                Name = studentObj.Name,
+                Email = studentObj.Email,
+                PhoneNumber = studentObj.PhoneNumber,
+                CityOfOrigin = studentObj.CityOfOrigin,
+                StateOfOrigin = studentObj.StateOfOrigin,
+                CountryOfOrigin = studentObj.CountryOfOrigin,
+                Nationality = studentObj.Nationality,
+                Grade = sGrade!,
+                Batch = SBatch!,
+                School = sSchool!,
+                GradeId = sGrade.Id,
+                BatchId = SBatch.Id,
+                SchoolId = sSchool.Id
+            };
+
+            //replace student from db
+            _context.Remove(s);
+            await _context.AddAsync(student);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        async Task<bool> ISchoolService.EditBatch(List<string> subjects, string batchName, string schoolName) {
+            try {
+                var batch = await _context.Batches
+                    .Include(batch => batch.Subjects)
+                    .SingleAsync(b => b.Name == batchName);
+
+                //get subjects
+                var subs = new List<Subject>();
+                foreach (var sub in subjects) {
+                    var Subject = await GetSubjectByName(sub);
+                    if (Subject == null) {
+                        return false;
+                    }
+                   
+                    subs.Add(Subject);
+                }
+
+                //only possible edit made in Batch
+                batch.Subjects = subs;
+
+            }
+            catch (Exception ex) {
+                Console.WriteLine(ex.Message);
+                return false;
+            }
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        async Task<bool> ISchoolService.DeleteStudent(string SUID, string schoolName) {
+            var student = await _context.Students.SingleAsync(student =>  student.StudentUID == SUID);
+
+            if(student == null) {
+                return false;
+            }
+
+            _context.Students.Remove(student);
             await _context.SaveChangesAsync();
             return true;
         }

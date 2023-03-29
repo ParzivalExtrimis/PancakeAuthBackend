@@ -123,8 +123,8 @@ namespace PancakeAuthBackend.Controllers {
             var studentList = new List<StudentDTO>(students);
             try {
                 return await _schoolService.AddStudents(studentList, schoolName)
-              ? new OkObjectResult("Student Added Successfully")
-              : new BadRequestObjectResult("Students could not be added. Provide a correct formatted JSON.");
+              ? new OkObjectResult("Student(s) Added Successfully")
+              : new BadRequestObjectResult("Students could not be added. Provide a correctly formatted JSON.");
             }
             catch (DbUpdateException ex) {
                 // Handle the exception
@@ -139,7 +139,7 @@ namespace PancakeAuthBackend.Controllers {
 
         // POST api/<ValuesController>
         [HttpPost("{schoolName}/Batches")]
-        public async Task<IActionResult> AddBatches(string schoolName, [FromBody] BatchDTO batch) {
+        public async Task<IActionResult> AddBatch(string schoolName, [FromBody] BatchDTO batch) {
             if (!_schoolService.SchoolExists(schoolName)) {
                 return new NotFoundObjectResult("School does not exist.");
             }
@@ -151,8 +151,51 @@ namespace PancakeAuthBackend.Controllers {
 
 
         // PUT api/<ValuesController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value) {
+        [HttpPut("{schoolName}/Students")]
+        public async Task<IActionResult> EditStudent(string schoolName, [FromBody] StudentDTO student) {
+            if (!_schoolService.SchoolExists(schoolName)) {
+                return new NotFoundObjectResult("School does not exist.");
+            }
+
+            try {
+                return await _schoolService.EditStudent(student, schoolName)
+              ? new OkObjectResult("Student Attributes Updated Successfully")
+              : new BadRequestObjectResult("Student could not be updated. Provide a correctly formatted JSON.");
+            }
+            catch (DbUpdateException ex) {
+                // Handle the exception
+                if (ex.InnerException is SqlException sqlEx && sqlEx.Number == 2601) {
+                    string errorMessage = $"Failed: {sqlEx.Message}";
+                    return new BadRequestObjectResult(errorMessage);
+                }
+                return new BadRequestObjectResult("Students could not be updated. Constraints violated");
+            }
         }
+
+        // PUT api/<ValuesController>
+        [HttpPut("{schoolName}/Batches/{batchName}")]
+        public async Task<IActionResult> EditBatch(string schoolName, string batchName, [FromBody] List<string> subjects) {
+            if (!_schoolService.SchoolExists(schoolName)) {
+                return new NotFoundObjectResult("School does not exist.");
+            }
+
+            return await _schoolService.EditBatch(subjects, batchName, schoolName)
+                ? new OkObjectResult("Batch Attributes Updated Successfully")
+                : new BadRequestObjectResult("Batch could not be updated. Provide a correctly formatted JSON.");
+        }
+
+        //GET: school.self.AllStudents => list
+        [HttpDelete("{schoolName}/Students/{SUID}")]
+        async public Task<IActionResult> DeleteStudent(string schoolName, string SUID) {
+            if (!_schoolService.SchoolExists(schoolName)) {
+                return new NotFoundObjectResult("School does not exist.");
+            }
+            
+            return await _schoolService.DeleteStudent(SUID, schoolName)
+                ? new OkObjectResult("Student Deleted Successfully.")
+                : new BadRequestObjectResult("Student could not be Deleted. Provide a correctly formatted JSON.");
+        }
+
+
     }
 }
