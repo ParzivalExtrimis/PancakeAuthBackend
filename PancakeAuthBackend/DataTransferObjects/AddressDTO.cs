@@ -1,6 +1,5 @@
-﻿namespace PancakeAuthBackend.Models {
-    public class Address {
-        public int Id { get; set; }
+﻿namespace PancakeAuthBackend.DataTransferObjects {
+    public class AddressDTO {
         public string SchoolName { get; set; } = null!;
         public string StreetName { get; set; } = null!;
         public string City { get; set; } = null!;

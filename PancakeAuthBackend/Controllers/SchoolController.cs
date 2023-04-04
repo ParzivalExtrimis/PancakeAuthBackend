@@ -15,18 +15,18 @@ namespace PancakeAuthBackend.Controllers {
             _schoolService = schoolService;
         }
 
-        // GET: school.self => when jwt is setup, now {id}
+        // GET: school.self => when jwt is setup, now {name}
         [HttpGet("{name}")]
-        public IActionResult Get(string name) {
-            return _schoolService.SchoolExists(name)
-                ? new OkObjectResult(_schoolService.GetSchoolData(name))
+        async public Task<IActionResult> Get(string name) {
+            return await _schoolService.SchoolExists(name)
+                ? new OkObjectResult(await _schoolService.GetSchoolData(name))
                 : new NotFoundObjectResult("School does not exist.");
         }
 
         //GET: school.self.AllStudents => list
         [HttpGet("{schoolName}/Students")]
-        public IActionResult ListStudents(string schoolName) {
-            if (!_schoolService.SchoolExists(schoolName)) {
+        async public Task<IActionResult> ListStudents(string schoolName) {
+            if (!await _schoolService.SchoolExists(schoolName)) {
                 return new NotFoundObjectResult("School does not exist.");
             }
             var students = _schoolService.GetSchoolStudents(schoolName);
@@ -37,8 +37,8 @@ namespace PancakeAuthBackend.Controllers {
 
         //GET: school.self.AllStudents.page => list(page)
         [HttpGet("{schoolName}/Students/Paged")]
-        public IActionResult ListStudents(string schoolName, int pageIndex, int pageSize) {
-            if (!_schoolService.SchoolExists(schoolName)) {
+        async public Task<IActionResult> ListStudents(string schoolName, int pageIndex, int pageSize) {
+            if (!await _schoolService.SchoolExists(schoolName)) {
                 return new NotFoundObjectResult("School does not exist.");
             }
             var students = _schoolService.GetSchoolStudentsByPage(schoolName, pageIndex, pageSize);
@@ -48,8 +48,8 @@ namespace PancakeAuthBackend.Controllers {
         }
 
         [HttpGet("{schoolName}/Subscriptions")]
-        public IActionResult ListSubscriptions(string schoolName) {
-            if (!_schoolService.SchoolExists(schoolName)) {
+        async public Task<IActionResult> ListSubscriptions(string schoolName) {
+            if (!await _schoolService.SchoolExists(schoolName)) {
                 return new NotFoundObjectResult("School does not exist.");
             }
             var subscriptions = _schoolService.GetSchoolSubscriptions(schoolName);
@@ -59,8 +59,8 @@ namespace PancakeAuthBackend.Controllers {
         }
 
         [HttpGet("{schoolName}/Subscriptions/Paged")]
-        public IActionResult ListSubscriptionsByPage(string schoolName, int pageIndex, int pageSize) {
-            if (!_schoolService.SchoolExists(schoolName)) {
+        async public Task<IActionResult> ListSubscriptionsByPage(string schoolName, int pageIndex, int pageSize) {
+            if (!await _schoolService.SchoolExists(schoolName)) {
                 return new NotFoundObjectResult("School does not exist.");
             }
             var subscriptions = _schoolService.GetSchoolSubscriptionsByPage(schoolName, pageIndex, pageSize);
@@ -70,8 +70,8 @@ namespace PancakeAuthBackend.Controllers {
         }
 
         [HttpGet("{schoolName}/Batches")]
-        public IActionResult ListBatches(string schoolName) {
-            if (!_schoolService.SchoolExists(schoolName)) {
+        async public Task<IActionResult> ListBatches(string schoolName) {
+            if (!await _schoolService.SchoolExists(schoolName)) {
                 return new NotFoundObjectResult("School does not exist.");
             }
             var batches = _schoolService.GetSchoolBatches(schoolName);
@@ -81,8 +81,8 @@ namespace PancakeAuthBackend.Controllers {
         }
 
         [HttpGet("{schoolName}/Batches/Paged")]
-        public IActionResult ListBatchesbyPage(string schoolName, int pageIndex, int pageSize) {
-            if (!_schoolService.SchoolExists(schoolName)) {
+        async public Task<IActionResult> ListBatchesbyPage(string schoolName, int pageIndex, int pageSize) {
+            if (!await _schoolService.SchoolExists(schoolName)) {
                 return new NotFoundObjectResult("School does not exist.");
             }
             var batches = _schoolService.GetSchoolBatchesByPage(schoolName, pageIndex, pageSize);
@@ -92,8 +92,8 @@ namespace PancakeAuthBackend.Controllers {
         }
 
         [HttpGet("{schoolName}/Payments")]
-        public IActionResult ListPayments(string schoolName) {
-            if (!_schoolService.SchoolExists(schoolName)) {
+        async public Task<IActionResult> ListPayments(string schoolName) {
+            if (!await _schoolService.SchoolExists(schoolName)) {
                 return new NotFoundObjectResult("School does not exist.");
             }
             var payments = _schoolService.GetSchoolPayments(schoolName);
@@ -102,8 +102,8 @@ namespace PancakeAuthBackend.Controllers {
                 : new NotFoundObjectResult("No Payments found.");
         }
         [HttpGet("{schoolName}/Payments/Paged")]
-        public IActionResult ListPaymentsByPage(string schoolName, int pageIndex, int pageSize) {
-            if (!_schoolService.SchoolExists(schoolName)) {
+        async public Task<IActionResult> ListPaymentsByPage(string schoolName, int pageIndex, int pageSize) {
+            if (!await _schoolService.SchoolExists(schoolName)) {
                 return new NotFoundObjectResult("School does not exist.");
             }
             var payments = _schoolService.GetSchoolPaymentsByPage(schoolName, pageIndex, pageSize);
@@ -116,7 +116,7 @@ namespace PancakeAuthBackend.Controllers {
         // POST api/<ValuesController>
         [HttpPost("{schoolName}/Students")]
         public async Task<IActionResult> AddStudents(string schoolName, [FromBody] StudentDTO[] students) {
-            if (!_schoolService.SchoolExists(schoolName)) {
+            if (!await _schoolService.SchoolExists(schoolName)) {
                 return new NotFoundObjectResult("School does not exist.");
             }
 
@@ -140,7 +140,7 @@ namespace PancakeAuthBackend.Controllers {
         // POST api/<ValuesController>
         [HttpPost("{schoolName}/Batches")]
         public async Task<IActionResult> AddBatch(string schoolName, [FromBody] BatchDTO batch) {
-            if (!_schoolService.SchoolExists(schoolName)) {
+            if (!await _schoolService.SchoolExists(schoolName)) {
                 return new NotFoundObjectResult("School does not exist.");
             }
 
@@ -153,7 +153,7 @@ namespace PancakeAuthBackend.Controllers {
         // PUT api/<ValuesController>/5
         [HttpPut("{schoolName}/Students")]
         public async Task<IActionResult> EditStudent(string schoolName, [FromBody] StudentDTO student) {
-            if (!_schoolService.SchoolExists(schoolName)) {
+            if (!await _schoolService.SchoolExists(schoolName)) {
                 return new NotFoundObjectResult("School does not exist.");
             }
 
@@ -175,7 +175,7 @@ namespace PancakeAuthBackend.Controllers {
         // PUT api/<ValuesController>
         [HttpPut("{schoolName}/Batches/{batchName}")]
         public async Task<IActionResult> EditBatch(string schoolName, string batchName, [FromBody] List<string> subjects) {
-            if (!_schoolService.SchoolExists(schoolName)) {
+            if (!await _schoolService.SchoolExists(schoolName)) {
                 return new NotFoundObjectResult("School does not exist.");
             }
 
@@ -184,10 +184,10 @@ namespace PancakeAuthBackend.Controllers {
                 : new BadRequestObjectResult("Batch could not be updated. Provide a correctly formatted JSON.");
         }
 
-        //GET: school.self.AllStudents => list
+        //DELETE: school.self.sudent { name }
         [HttpDelete("{schoolName}/Students/{SUID}")]
         async public Task<IActionResult> DeleteStudent(string schoolName, string SUID) {
-            if (!_schoolService.SchoolExists(schoolName)) {
+            if (!await _schoolService.SchoolExists(schoolName)) {
                 return new NotFoundObjectResult("School does not exist.");
             }
             

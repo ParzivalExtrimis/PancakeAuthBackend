@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using PancakeAuthBackend.Models;
 using System.Collections.Generic;
+using System.Reflection.Metadata.Ecma335;
 
 namespace PancakeAuthBackend.Services {
     public class SchoolService : ISchoolService {
@@ -18,29 +19,49 @@ namespace PancakeAuthBackend.Services {
         private async Task<Subject?> GetSubjectByName(string name) 
             => await _context.Subjects.FirstOrDefaultAsync(subject => subject.Name == name);
 
-        private Task<Subject?> GetSubjectByNameWithBatch(string name)
-            => _context.Subjects
-            .Include(subject =>  subject.Batches)
-            .FirstOrDefaultAsync(subject => subject.Name == name);
-
 
         //********************************************************************************
 
         //in-service utility methods
-        public bool SchoolExists(string name) {
-            return _context.Schools.Any(school => school.Name == name);
-        }
+        async public Task<bool> SchoolExists(string name)
+            => await _context.Schools.AnyAsync(school => school.Name == name);
+        
 
         //********************************************************************************
 
         //service methods
-        public School? GetSchoolData(string name) {
-            var school = InitSchool(name);
+        async public Task<SchoolDTO?> GetSchoolData(string name) {
+            var school = await _context.Schools
+                .Include(sc => sc.Subscriptions)
+                .SingleOrDefaultAsync(s => s.Name == name);
+
             if (school == null) {
                 return null;
             }
             school!.Address = _context.Addresses.FirstOrDefault(address => address.Id == school.AddressId) ?? null!;
-            return school;
+
+            List<string> subs = new List<string>();
+            if(school.Subscriptions != null) {
+                foreach(var subsciption in school.Subscriptions) {
+                    if(subsciption != null) {
+                        subs.Add(subsciption.Name);
+                    }
+
+                }
+            }
+
+            var schoolObj = new SchoolDTO {
+                Name = school.Name,
+                Subscriptions = subs,
+                StreetName = school.Address.StreetName,
+                City = school.Address.City,
+                Region = school.Address.Region,
+                State = school.Address.State,
+                PostalCode = school.Address.PostalCode,
+                Country = school.Address.Country
+            };
+
+            return schoolObj;
         }
 
         public List<StudentDTO> GetSchoolStudents(string schoolName) {
@@ -105,7 +126,9 @@ namespace PancakeAuthBackend.Services {
             var school = InitSchool(schoolName);
             var subscriptionObjects = new List<SubscriptionDTO>();
             if (school != null) {
-                var subscriptions = _context.Subscriptions.Where(subscription => subscription.SchoolId == school.Id).ToList();
+                var subscriptions = _context.Subscriptions
+                    .Include(subscription => subscription.Schools)
+                    .Where(subscription => subscription.Schools!.Any(s => s.Id == school.Id)).ToList();
                 foreach (var subscription in subscriptions) {
                     List<string> chapters = _context.Chapters.Where(chapter => chapter.SubscriptionId == subscription.Id)
                         .Select(chapter => chapter.Title).
@@ -127,7 +150,12 @@ namespace PancakeAuthBackend.Services {
             var school = InitSchool(schoolName);
             var subscriptionObjects = new List<SubscriptionDTO>();
             if (school != null) {
-                var subscriptions = _context.Subscriptions.Where(subscription => subscription.SchoolId == school.Id).Skip((pageIndex - 1) * pageSize).Take(pageSize).ToList();
+                var subscriptions = _context.Subscriptions
+                   .Include(subscription => subscription.Schools)
+                   .Where(subscription => subscription.Schools!.Any(s => s.Id == school.Id)).ToList()
+                   .Skip((pageIndex - 1) * pageSize)
+                   .Take(pageSize)
+                   .ToList();
                 foreach (var subscription in subscriptions) {
                     List<string> chapters = _context.Chapters.Where(chapter => chapter.SubscriptionId == subscription.Id)
                         .Select(chapter => chapter.Title).
@@ -213,10 +241,11 @@ namespace PancakeAuthBackend.Services {
 
         async Task<bool> ISchoolService.AddStudents(List<StudentDTO> studentObjects, string schoolName) {
             var school = InitSchool(schoolName);
+
             var studentList = new List<Student>();
             foreach (var studentObj in studentObjects) {
                 var sGrade = await _context.Grades.FirstOrDefaultAsync(grade => grade.Name == studentObj.Grade);
-                var SBatch = await _context.Batches.FirstOrDefaultAsync(batch => batch.Name == studentObj.Batch);
+                var SBatch = await _context.Batches.FirstOrDefaultAsync(batch => batch.Name == studentObj.Batch && batch.SchoolId == school!.Id);
                 var sSchool = await _context.Schools.FirstOrDefaultAsync(school => school.Name == schoolName);
 
                 if (sGrade == null || SBatch == null || sSchool == null) {

@@ -3,8 +3,8 @@ namespace PancakeAuthBackend.Services {
     public interface ISchoolService {
 
         //GET services
-        bool SchoolExists(string name);
-        School? GetSchoolData(string name);
+        Task<bool> SchoolExists(string name);
+        Task<SchoolDTO?> GetSchoolData(string name);
         List<StudentDTO> GetSchoolStudents(string schoolName);
         List<StudentDTO> GetSchoolStudentsByPage(string schoolName, int pageIndex, int pageSize);
 
