@@ -10,8 +10,8 @@ namespace PancakeAuthBackend.DataTransferObjects {
         public string StateOfOrigin { get; set; } = null!;
         public string CountryOfOrigin { get; set; } = null!;
         public string Nationality { get; set; } = null!;
-        public string Grade { get; set; } = null!;
         public string Batch { get; set; } = null!;
+        public string Grade { get; set; } = null!;
         public string School { get; set; } = null!;
     }
 }

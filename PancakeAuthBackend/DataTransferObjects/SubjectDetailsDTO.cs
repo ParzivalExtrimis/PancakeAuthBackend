@@ -1,6 +1,6 @@
 ﻿namespace PancakeAuthBackend.DataTransferObjects {
-    public class BatchDTO {
+    public class SubjectDetailsDTO {
         public string Name { get; set; } = null!;
-        public ICollection<string> Students { get; set; } = null!;
+        public ICollection<ChapterDTO> Chapters { get; set; } = null!;
     }
 }
