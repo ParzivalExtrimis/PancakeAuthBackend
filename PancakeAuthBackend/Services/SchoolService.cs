@@ -29,64 +29,52 @@ namespace PancakeAuthBackend.Services {
 
         //service methods
         async public Task<SchoolDTO?> GetSchoolData(string name) {
-            var school = await _context.Schools
+            return await _context.Schools
                 .Include(sc => sc.Subscriptions)
-                .SingleOrDefaultAsync(s => s.Name == name);
-
-            if (school == null) {
-                return null;
-            }
-            school!.Address = _context.Addresses.FirstOrDefault(address => address.Id == school.AddressId) ?? null!;
-
-            var subs = new List<string>();
-            if(school.Subscriptions != null) {
-                foreach(var subsciption in school.Subscriptions) {
-                    if(subsciption != null) {
-                        subs.Add(subsciption.Name);
+                .Include(sc => sc.Address)
+                .Where(s => s.Name == name)
+                .Select( school =>
+                    new SchoolDTO {
+                        Name = school.Name,
+                        Subscriptions = school.Subscriptions != null 
+                                ? school.Subscriptions.Select(s => s.Name).ToList()
+                                : new List<string>(),
+                        StreetName = school.Address.StreetName,
+                        City = school.Address.City,
+                        Region = school.Address.Region,
+                        State = school.Address.State,
+                        PostalCode = school.Address.PostalCode,
+                        Country = school.Address.Country
                     }
-
-                }
-            }
-
-            var schoolObj = new SchoolDTO {
-                Name = school.Name,
-                Subscriptions = subs,
-                StreetName = school.Address.StreetName,
-                City = school.Address.City,
-                Region = school.Address.Region,
-                State = school.Address.State,
-                PostalCode = school.Address.PostalCode,
-                Country = school.Address.Country
-            };
-
-            return schoolObj;
+                )
+                .FirstOrDefaultAsync();
         }
 
         async public Task<List<StudentDTO>> GetSchoolStudents(string schoolName) {
             var school = await InitSchool(schoolName);
             var studentObjects = new List<StudentDTO>();
             if (school != null) {
-                var students = _context.Students
+                studentObjects = _context.Students
                     .Include(s => s.Batch)
+                    .Include(s => s.Grade)
+                    .Include(s => s.School)
                     .Where(student => student.School == school)
+                    .Select(s => new StudentDTO {
+                        StudentUID = s.StudentUID,
+                        Name = s.Name,
+                        Email = s.Email,
+                        PhoneNumber = s.PhoneNumber,
+                        CityOfOrigin = s.CityOfOrigin,
+                        StateOfOrigin = s.StateOfOrigin,
+                        CountryOfOrigin = s.CountryOfOrigin,
+                        Nationality = s.Nationality,
+                        Batch = s.Batch != null ? s.Batch.Name : "None",
+                        School = s.School.Name,
+                        Grade = s.Grade.Name
+                    })
                     .ToList();
-                foreach (var student in students) {
-                    var studentObj = new StudentDTO {
-                        StudentUID = student.StudentUID,
-                        Name = student.Name,
-                        Email = student.Email,
-                        PhoneNumber = student.PhoneNumber,
-                        CityOfOrigin = student.CityOfOrigin,
-                        StateOfOrigin = student.StateOfOrigin,
-                        CountryOfOrigin = student.CountryOfOrigin,
-                        Nationality = student.Nationality,
-                        Batch = student.Batch != null ? student.Batch.Name : "None",
-                        School = student.School.Name,
-                        Grade = student.Grade.Name
-                    };
-                    studentObjects.Add(studentObj);
-                }
             }
+
             return studentObjects;
         } 
 
@@ -94,62 +82,57 @@ namespace PancakeAuthBackend.Services {
             var school = await InitSchool(schoolName);
             var studentObjects = new List<StudentDTO>();
             if (school != null) {
-                var students = _context.Students
+                studentObjects = _context.Students
                     .Include(s => s.Batch)
+                    .Include(s => s.Grade)
+                    .Include(s => s.School)
                     .Where(student => student.School == school)
+                    .Select(s => new StudentDTO {
+                        StudentUID = s.StudentUID,
+                        Name = s.Name,
+                        Email = s.Email,
+                        PhoneNumber = s.PhoneNumber,
+                        CityOfOrigin = s.CityOfOrigin,
+                        StateOfOrigin = s.StateOfOrigin,
+                        CountryOfOrigin = s.CountryOfOrigin,
+                        Nationality = s.Nationality,
+                        Batch = s.Batch != null ? s.Batch.Name : "None",
+                        School = s.School.Name,
+                        Grade = s.Grade.Name
+                    })
                     .Skip((pageIndex - 1) * pageSize)
                     .Take(pageSize)
                     .ToList();
-                foreach (var student in students) {
-                    var studentObj = new StudentDTO {
-                        StudentUID = student.StudentUID,
-                        Name = student.Name,
-                        Email = student.Email,
-                        PhoneNumber = student.PhoneNumber,
-                        CityOfOrigin = student.CityOfOrigin,
-                        StateOfOrigin = student.StateOfOrigin,
-                        CountryOfOrigin = student.CountryOfOrigin,
-                        Nationality = student.Nationality,
-                        Batch = student.Batch != null ? student.Batch.Name : "None",
-                        School = student.School.Name,
-                        Grade = student.Grade.Name
-                    };
-                    studentObjects.Add(studentObj);
-                }
             }
+
             return studentObjects;
         }
 
         async Task<List<StudentDTO>> ISchoolService.GetSchoolStudentByGrade(string schoolName, string grade) {
-            var school =await InitSchool(schoolName);
+            var school = await InitSchool(schoolName);
             var studentObjects = new List<StudentDTO>();
             if (school != null) {
-                var students = _context.Students
+                studentObjects = _context.Students
                     .Include(s => s.Batch)
-                    .Include(s => s.School)
                     .Include(s => s.Grade)
-                    .Where(student =>
-                         student.School == school
-                      && student.Grade.Name == grade
-                    ).ToList();
-                foreach (var student in students) {
-
-                    var studentObj = new StudentDTO {
-                        StudentUID = student.StudentUID,
-                        Name = student.Name,
-                        Email = student.Email,
-                        PhoneNumber = student.PhoneNumber,
-                        CityOfOrigin = student.CityOfOrigin,
-                        StateOfOrigin = student.StateOfOrigin,
-                        CountryOfOrigin = student.CountryOfOrigin,
-                        Nationality = student.Nationality,
-                        Batch = student.Batch == null ? "None" : student.Batch.Name,
-                        Grade = grade,
-                        School = schoolName
-                    };
-                    studentObjects.Add(studentObj);
-                }
+                    .Include(s => s.School)
+                    .Where(student => student.School == school && student.Grade.Name == grade)
+                    .Select(s => new StudentDTO {
+                        StudentUID = s.StudentUID,
+                        Name = s.Name,
+                        Email = s.Email,
+                        PhoneNumber = s.PhoneNumber,
+                        CityOfOrigin = s.CityOfOrigin,
+                        StateOfOrigin = s.StateOfOrigin,
+                        CountryOfOrigin = s.CountryOfOrigin,
+                        Nationality = s.Nationality,
+                        Batch = s.Batch != null ? s.Batch.Name : "None",
+                        School = s.School.Name,
+                        Grade = s.Grade.Name
+                    })
+                    .ToList();
             }
+
             return studentObjects;
         }
 
@@ -157,35 +140,29 @@ namespace PancakeAuthBackend.Services {
             var school = await InitSchool(schoolName);
             var studentObjects = new List<StudentDTO>();
             if (school != null) {
-                var students = _context.Students
+                studentObjects = _context.Students
                     .Include(s => s.Batch)
-                    .Include(s => s.School)
                     .Include(s => s.Grade)
-                    .Where(student =>
-                         student.School == school
-                      && student.Grade.Name == grade
-                    )
+                    .Include(s => s.School)
+                    .Where(student => student.School == school && student.Grade.Name == grade)
+                    .Select(s => new StudentDTO {
+                        StudentUID = s.StudentUID,
+                        Name = s.Name,
+                        Email = s.Email,
+                        PhoneNumber = s.PhoneNumber,
+                        CityOfOrigin = s.CityOfOrigin,
+                        StateOfOrigin = s.StateOfOrigin,
+                        CountryOfOrigin = s.CountryOfOrigin,
+                        Nationality = s.Nationality,
+                        Batch = s.Batch != null ? s.Batch.Name : "None",
+                        School = s.School.Name,
+                        Grade = s.Grade.Name
+                    })
                     .Skip((pageIndex - 1) * pageSize)
                     .Take(pageSize)
                     .ToList();
-                foreach (var student in students) {
-
-                    var studentObj = new StudentDTO {
-                        StudentUID = student.StudentUID,
-                        Name = student.Name,
-                        Email = student.Email,
-                        PhoneNumber = student.PhoneNumber,
-                        CityOfOrigin = student.CityOfOrigin,
-                        StateOfOrigin = student.StateOfOrigin,
-                        CountryOfOrigin = student.CountryOfOrigin,
-                        Nationality = student.Nationality,
-                        Batch = student.Batch == null ? "None" : student.Batch.Name,
-                        Grade = grade,
-                        School = schoolName
-                    };
-                    studentObjects.Add(studentObj);
-                }
             }
+
             return studentObjects;
         }
 
@@ -193,27 +170,31 @@ namespace PancakeAuthBackend.Services {
             var school = await InitSchool(schoolName);
             var studentObjects = new List<StudentDTO>();
             if (school != null) {
-                var students = _context.Students
-                    .Include(stu => stu.Batch)
-                    .Where(student => student.Batch == null 
-                        && student.Batch!.Name == batch)
+                studentObjects = _context.Students
+                    .Include(s => s.Batch)
+                    .Include(s => s.Grade)
+                    .Include(s => s.School)
+                    .Where(
+                        student => student.School == school 
+                     && student.Batch != null 
+                     && student.Batch.Name == batch
+                    )
+                    .Select(s => new StudentDTO {
+                        StudentUID = s.StudentUID,
+                        Name = s.Name,
+                        Email = s.Email,
+                        PhoneNumber = s.PhoneNumber,
+                        CityOfOrigin = s.CityOfOrigin,
+                        StateOfOrigin = s.StateOfOrigin,
+                        CountryOfOrigin = s.CountryOfOrigin,
+                        Nationality = s.Nationality,
+                        Batch = s.Batch != null ? s.Batch.Name : "None",
+                        School = s.School.Name,
+                        Grade = s.Grade.Name
+                    })
                     .ToList();
-                foreach (var student in students) {
-                    var studentObj = new StudentDTO {
-                        StudentUID = student.StudentUID,
-                        Name = student.Name,
-                        Email = student.Email,
-                        PhoneNumber = student.PhoneNumber,
-                        CityOfOrigin = student.CityOfOrigin,
-                        StateOfOrigin = student.StateOfOrigin,
-                        CountryOfOrigin = student.CountryOfOrigin,
-                        Nationality = student.Nationality,
-                        Batch = batch,
-                        School = schoolName
-                    };
-                    studentObjects.Add(studentObj);
-                }
             }
+
             return studentObjects;
         }
 
@@ -221,29 +202,33 @@ namespace PancakeAuthBackend.Services {
             var school = await InitSchool(schoolName);
             var studentObjects = new List<StudentDTO>();
             if (school != null) {
-                var students = _context.Students
-                    .Include(stu => stu.Batch)
-                    .Where(student => student.Batch == null
-                        && student.Batch!.Name == batch)
-                   .Skip((pageIndex - 1) * pageSize)
-                   .Take(pageSize)
+                studentObjects = _context.Students
+                    .Include(s => s.Batch)
+                    .Include(s => s.Grade)
+                    .Include(s => s.School)
+                    .Where(
+                        student => student.School == school
+                     && student.Batch != null
+                     && student.Batch.Name == batch
+                    )
+                    .Select(s => new StudentDTO {
+                        StudentUID = s.StudentUID,
+                        Name = s.Name,
+                        Email = s.Email,
+                        PhoneNumber = s.PhoneNumber,
+                        CityOfOrigin = s.CityOfOrigin,
+                        StateOfOrigin = s.StateOfOrigin,
+                        CountryOfOrigin = s.CountryOfOrigin,
+                        Nationality = s.Nationality,
+                        Batch = s.Batch != null ? s.Batch.Name : "None",
+                        School = s.School.Name,
+                        Grade = s.Grade.Name
+                    })
+                    .Skip((pageIndex - 1) * pageSize)
+                    .Take(pageSize)
                     .ToList();
-                foreach (var student in students) {
-                    var studentObj = new StudentDTO {
-                        StudentUID = student.StudentUID,
-                        Name = student.Name,
-                        Email = student.Email,
-                        PhoneNumber = student.PhoneNumber,
-                        CityOfOrigin = student.CityOfOrigin,
-                        StateOfOrigin = student.StateOfOrigin,
-                        CountryOfOrigin = student.CountryOfOrigin,
-                        Nationality = student.Nationality,
-                        Batch = batch,
-                        School = schoolName
-                    };
-                    studentObjects.Add(studentObj);
-                }
             }
+
             return studentObjects;
         }
 
@@ -251,24 +236,17 @@ namespace PancakeAuthBackend.Services {
             var school = InitSchool(schoolName);
             var subscriptionObjects = new List<SubscriptionDTO>();
             if (school != null) {
-                var subscriptions = await _context.Schools
-                    .Include(s => s.Subscriptions)
-                    .Select(s => s.Subscriptions)
-                    .FirstOrDefaultAsync(s => s != null && s.Equals(school));
-
-                if(subscriptions is null) {
-                    return new List<SubscriptionDTO>();
-                }
-
-                foreach(var subscription in subscriptions) {
-                    var subscriptionObj = new SubscriptionDTO {
+                subscriptionObjects = await _context.Subscriptions
+                    .Include(s => s.AvailedSchools)
+                    .Where(s => s.AvailedSchools
+                        .Any(a => a.SchoolId == school.Id))
+                    .Select(subscription => new SubscriptionDTO {
                         Type = subscription.Type,
                         Name = subscription.Name,
                         Description = subscription.Description,
-                        IncludedChapters = subscription.IncludedChapters.Select(c => c.Title).ToList(),
-                    };
-                    subscriptionObjects.Add(subscriptionObj);
-                }
+                        IncludedChapters = subscription.Chapters.Select(c => c.Title).ToList(),
+                    })
+                    .ToListAsync();
             }
             return subscriptionObjects;
         }

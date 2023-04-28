@@ -1,12 +1,14 @@
 ﻿using Azure;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using PancakeAuthBackend.Models;
 
 namespace PancakeAuthBackend.Data {
-    public class BackendDataContext : DbContext {
-        public BackendDataContext(DbContextOptions options) : base(options) {
-        }
+    public class BackendDataContext : IdentityDbContext<User> {
+        public BackendDataContext() {}
+        public BackendDataContext(DbContextOptions options) : base(options) {}
+
         public DbSet<Billing> Payments { get; set; }
         public DbSet<Address> Addresses { get; set; }
         public DbSet<Batch> Batches { get; set; }
@@ -37,16 +39,22 @@ namespace PancakeAuthBackend.Data {
               .IsUnique();
 
             modelBuilder.Entity<Student>()
-              .HasOne(s => s.Batch)
+              .HasOne(s => s.School)
               .WithMany(s => s.Students)
               .HasForeignKey(s => s.SchoolId)
-              .OnDelete(DeleteBehavior.Cascade);
+              .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Student>()
              .HasOne(s => s.Batch)
              .WithMany(s => s.Students)
              .HasForeignKey(s => s.BatchId)
-             .OnDelete(DeleteBehavior.Cascade);
+             .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Student>()
+            .HasOne(s => s.Grade)
+            .WithMany(s => s.Students)
+            .HasForeignKey(s => s.GradeId)
+            .OnDelete(DeleteBehavior.NoAction);
 
 
             //school model
@@ -63,7 +71,7 @@ namespace PancakeAuthBackend.Data {
             modelBuilder.Entity<School>()
               .HasOne(sch => sch.Address)
               .WithOne(s => s.School)
-              .OnDelete(DeleteBehavior.Cascade);
+              .OnDelete(DeleteBehavior.Restrict);
 
             //subject model
             modelBuilder.Entity<Subject>()
@@ -102,8 +110,13 @@ namespace PancakeAuthBackend.Data {
              .HasForeignKey(chap => chap.SubjectId)
              .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<Chapter>()
+              .HasMany(ch => ch.Subscriptions)
+              .WithMany(sub => sub.Chapters)
+              .UsingEntity<ChaptersIncluded>();
+
             //sample data
-            //SampleDataSeeder.Seed(modelBuilder);
+            SampleDataSeeder.Seed(modelBuilder);
         }
     }
 }

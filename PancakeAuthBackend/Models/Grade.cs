@@ -7,5 +7,6 @@ namespace PancakeAuthBackend.Models {
 
         [Column(TypeName = "varchar(100)")]
         public string Name { get; set; } = null!;
+        public ICollection<Student>? Students { get; set; }
     }
 }

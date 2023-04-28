@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using PancakeAuthBackend.Models;
+using System.Net.WebSockets;
 using System.Reflection.Metadata.Ecma335;
 
 namespace PancakeAuthBackend.Services {
@@ -84,6 +85,15 @@ namespace PancakeAuthBackend.Services {
                 return false;
             }
 
+            var students = _context.Students
+                .Where(s => s.SchoolId == school.Id)
+                .ToList();
+
+            if(students is not null) {
+                _context.Students.RemoveRange(students);
+                await _context.SaveChangesAsync();
+            }
+           
             _context.Schools.Remove(school);
             await _context.SaveChangesAsync();
             return true;
@@ -269,92 +279,51 @@ namespace PancakeAuthBackend.Services {
         }
 
         async Task<List<SubscriptionDTO>> IAdminService.GetSubscriptions() {
-            var subscriptions = new List<SubscriptionDTO>();
             var subscriptionRecords = await _context.Subscriptions
-                .Include(sub => sub.IncludedChapters)
-                .ToListAsync();
-
-            if (subscriptionRecords is null) {
-                return subscriptions;
-            }
-
-            foreach (var record in subscriptionRecords) {
-                if (record is null) {
-                    continue;
-                }
-                //get chapters list
-                var chapters = new List<string>();
-                foreach (var chapter in record.IncludedChapters) {
-                    chapters.Add(chapter.Title);
-                }
-
-                var subscription = new SubscriptionDTO {
+                .Include(sub => sub.Chapters)
+                .Select(record => new SubscriptionDTO {
                     Type = record.Type,
                     Name = record.Name,
                     Description = record.Description,
-                    IncludedChapters = chapters
-                };
-                subscriptions.Add(subscription);
-            }
-            return subscriptions;
+                    IncludedChapters = record.Chapters
+                            .Select(x => x.Title)
+                            .ToList()
+                })
+                .ToListAsync();
+
+            return subscriptionRecords ?? new List<SubscriptionDTO>();
         }
 
         async Task<List<SubscriptionDTO>> IAdminService.GetSubscriptionsByPage(int pageIndex, int pageSize) {
-            var subscriptions = new List<SubscriptionDTO>();
             var subscriptionRecords = await _context.Subscriptions
-                .Include(sub => sub.IncludedChapters)
-                .Skip((pageIndex - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
+                 .Include(sub => sub.Chapters)
+                 .Select(record => new SubscriptionDTO {
+                     Type = record.Type,
+                     Name = record.Name,
+                     Description = record.Description,
+                     IncludedChapters = record.Chapters
+                             .Select(x => x.Title)
+                             .ToList()
+                 })
+                 .Skip((pageIndex - 1) * pageSize)
+                 .Take(pageSize)
+                 .ToListAsync();
 
-            if (subscriptionRecords is null) {
-                return subscriptions;
-            }
-
-            foreach (var record in subscriptionRecords) {
-                if (record is null) {
-                    continue;
-                }
-                //get chapters list
-                var chapters = new List<string>();
-                foreach (var chapter in record.IncludedChapters) {
-                    chapters.Add(chapter.Title);
-                }
-
-                var subscription = new SubscriptionDTO {
-                    Type = record.Type,
-                    Name = record.Name,
-                    Description = record.Description,
-                    IncludedChapters = chapters
-                };
-                subscriptions.Add(subscription);
-            }
-            return subscriptions;
+            return subscriptionRecords ?? new List<SubscriptionDTO>();
         }
 
         async Task<SubscriptionDTO?> IAdminService.FindSubscription(string name) {
-            var subscription = await _context.Subscriptions
+            return await _context.Subscriptions
                 .Include(s => s.IncludedChapters)
-                .FirstOrDefaultAsync(sub => sub.Name == name);
-
-            if (subscription == null) {
-                return null;
-            }
-
-            var chapters = new List<string>();
-            foreach (var chapter in subscription.IncludedChapters) {
-                if (chapter is null) {
-                    continue;
-                }
-                chapters.Add(chapter.Title);
-            }
-
-            return new SubscriptionDTO {
-                Type = subscription!.Type,
-                Name = subscription!.Name,
-                Description = subscription!.Description,
-                IncludedChapters = chapters
-            };
+                .Where(sub => sub.Name == name)
+                .Select(subscription => new SubscriptionDTO {
+                    Type = subscription!.Type,
+                    Name = subscription!.Name,
+                    Description = subscription!.Description,
+                    IncludedChapters = subscription.Chapters
+                            .Select(c => c.Title).ToList()
+                })
+                .FirstOrDefaultAsync();
         }
 
         async Task<bool> IAdminService.AddSubscription(SubscriptionDTO subscription) {
@@ -373,7 +342,7 @@ namespace PancakeAuthBackend.Services {
                 Type = subscription.Type,
                 Name = subscription.Name,
                 Description = subscription.Description,
-                IncludedChapters = chapters
+                Chapters = chapters
             };
 
             await _context.Subscriptions.AddAsync(sub);
@@ -402,12 +371,12 @@ namespace PancakeAuthBackend.Services {
             }
             //replace chapters
    
-            sub.IncludedChapters = new List<Chapter>();
+            sub.Chapters = new List<Chapter>();
 
             sub.Name = subscription.Name;
             sub.Type = subscription.Type;
             sub.Description = subscription.Description;
-            sub.IncludedChapters = chapters;
+            sub.Chapters = chapters;
 
             await _context.SaveChangesAsync();
             return true;

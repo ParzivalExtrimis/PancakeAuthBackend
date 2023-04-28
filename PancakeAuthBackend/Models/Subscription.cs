@@ -15,6 +15,7 @@ namespace PancakeAuthBackend.Models {
         public string Description { get; set; } = null!;
         public ICollection<AvailedSubscription> AvailedSchools { get; set; } = null!;
         public ICollection<School> Schools { get; set; } = null!; 
-        public ICollection<Chapter> IncludedChapters { get; set; } = null!;
+        public ICollection<ChaptersIncluded> IncludedChapters { get; set; } = null!;
+        public ICollection<Chapter> Chapters { get; set; } = null!;
     }
 }

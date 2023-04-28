@@ -9,6 +9,8 @@ using System.Text;
 using PancakeAuthBackend.Services;
 using Microsoft.Extensions.Hosting;
 using Serilog;
+using Microsoft.Extensions.DependencyInjection;
+using PancakeAuthBackend;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,7 +29,10 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<BackendDataContext>((options) => {
     options.UseSqlServer(Configuration.GetConnectionString("Default"));
+    options.EnableDetailedErrors();
+    options.EnableSensitiveDataLogging();
 });
+
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options => {
@@ -42,6 +47,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 Configuration["Jwt:Key"]))
         };
     });
+
+builder.Services.ConfigureIdentity();
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
