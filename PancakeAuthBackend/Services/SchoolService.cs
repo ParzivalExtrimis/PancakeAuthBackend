@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using PancakeAuthBackend.Models;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection.Metadata.Ecma335;
 
 namespace PancakeAuthBackend.Services {
@@ -12,12 +13,9 @@ namespace PancakeAuthBackend.Services {
         }
 
         //util
-        private School? InitSchool(string name) {
-            return _context.Schools.FirstOrDefault(school => school.Name == name);
+        async private Task<School?> InitSchool(string name) {
+            return await _context.Schools.SingleOrDefaultAsync(school => school.Name == name);
         }
-
-        private async Task<Subject?> GetSubjectByName(string name) 
-            => await _context.Subjects.FirstOrDefaultAsync(subject => subject.Name == name);
 
 
         //********************************************************************************
@@ -31,224 +29,278 @@ namespace PancakeAuthBackend.Services {
 
         //service methods
         async public Task<SchoolDTO?> GetSchoolData(string name) {
-            var school = await _context.Schools
+            return await _context.Schools
                 .Include(sc => sc.Subscriptions)
-                .SingleOrDefaultAsync(s => s.Name == name);
-
-            if (school == null) {
-                return null;
-            }
-            school!.Address = _context.Addresses.FirstOrDefault(address => address.Id == school.AddressId) ?? null!;
-
-            List<string> subs = new List<string>();
-            if(school.Subscriptions != null) {
-                foreach(var subsciption in school.Subscriptions) {
-                    if(subsciption != null) {
-                        subs.Add(subsciption.Name);
+                .Include(sc => sc.Address)
+                .Where(s => s.Name == name)
+                .Select( school =>
+                    new SchoolDTO {
+                        Name = school.Name,
+                        Subscriptions = school.Subscriptions != null 
+                                ? school.Subscriptions.Select(s => s.Name).ToList()
+                                : new List<string>(),
+                        StreetName = school.Address.StreetName,
+                        City = school.Address.City,
+                        Region = school.Address.Region,
+                        State = school.Address.State,
+                        PostalCode = school.Address.PostalCode,
+                        Country = school.Address.Country
                     }
-
-                }
-            }
-
-            var schoolObj = new SchoolDTO {
-                Name = school.Name,
-                Subscriptions = subs,
-                StreetName = school.Address.StreetName,
-                City = school.Address.City,
-                Region = school.Address.Region,
-                State = school.Address.State,
-                PostalCode = school.Address.PostalCode,
-                Country = school.Address.Country
-            };
-
-            return schoolObj;
+                )
+                .FirstOrDefaultAsync();
         }
 
-        public List<StudentDTO> GetSchoolStudents(string schoolName) {
-            var school = InitSchool(schoolName);
+        async public Task<List<StudentDTO>> GetSchoolStudents(string schoolName) {
+            var school = await InitSchool(schoolName);
             var studentObjects = new List<StudentDTO>();
             if (school != null) {
-                var students = _context.Students.Where(student => student.School == school).ToList();
-                foreach (var student in students) {
-                    Grade? sGrade = _context.Grades.FirstOrDefault(grade => grade.Id == student.GradeId);
-                    Batch? sBatch = _context.Batches.FirstOrDefault(batch => batch.Id == student.BatchId);
-                    School? sSchool = _context.Schools.FirstOrDefault(school => school.Id == student.SchoolId);
-
-                    var studentObj = new StudentDTO {
-                        StudentUID = student.StudentUID,
-                        Name = student.Name,
-                        Email = student.Email,
-                        PhoneNumber = student.PhoneNumber,
-                        CityOfOrigin = student.CityOfOrigin,
-                        StateOfOrigin = student.StateOfOrigin,
-                        CountryOfOrigin = student.CountryOfOrigin,
-                        Nationality = student.Nationality,
-                        Grade = sGrade != null ? sGrade.Name : "NULL",
-                        Batch = sBatch != null ? sBatch.Name : "NULL",
-                        School = sSchool != null ? sSchool.Name : "NULL",
-                    };
-                    studentObjects.Add(studentObj);
-                }
+                studentObjects = _context.Students
+                    .Include(s => s.Batch)
+                    .Include(s => s.Grade)
+                    .Include(s => s.School)
+                    .Where(student => student.School == school)
+                    .Select(s => new StudentDTO {
+                        StudentUID = s.StudentUID,
+                        Name = s.Name,
+                        Email = s.Email,
+                        PhoneNumber = s.PhoneNumber,
+                        CityOfOrigin = s.CityOfOrigin,
+                        StateOfOrigin = s.StateOfOrigin,
+                        CountryOfOrigin = s.CountryOfOrigin,
+                        Nationality = s.Nationality,
+                        Batch = s.Batch != null ? s.Batch.Name : "None",
+                        School = s.School.Name,
+                        Grade = s.Grade.Name
+                    })
+                    .ToList();
             }
+
+            return studentObjects;
+        } 
+
+        async public Task<List<StudentDTO>> GetSchoolStudentsByPage(string schoolName, int pageIndex, int pageSize) {
+            var school = await InitSchool(schoolName);
+            var studentObjects = new List<StudentDTO>();
+            if (school != null) {
+                studentObjects = _context.Students
+                    .Include(s => s.Batch)
+                    .Include(s => s.Grade)
+                    .Include(s => s.School)
+                    .Where(student => student.School == school)
+                    .Select(s => new StudentDTO {
+                        StudentUID = s.StudentUID,
+                        Name = s.Name,
+                        Email = s.Email,
+                        PhoneNumber = s.PhoneNumber,
+                        CityOfOrigin = s.CityOfOrigin,
+                        StateOfOrigin = s.StateOfOrigin,
+                        CountryOfOrigin = s.CountryOfOrigin,
+                        Nationality = s.Nationality,
+                        Batch = s.Batch != null ? s.Batch.Name : "None",
+                        School = s.School.Name,
+                        Grade = s.Grade.Name
+                    })
+                    .Skip((pageIndex - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
+            }
+
             return studentObjects;
         }
 
-        public List<StudentDTO> GetSchoolStudentsByPage(string schoolName, int pageIndex, int pageSize) {
-            var school = InitSchool(schoolName);
+        async Task<List<StudentDTO>> ISchoolService.GetSchoolStudentByGrade(string schoolName, string grade) {
+            var school = await InitSchool(schoolName);
             var studentObjects = new List<StudentDTO>();
             if (school != null) {
-                var students = _context.Students.Where(student => student.School == school).Skip((pageIndex - 1) * pageSize).Take(pageSize).ToList();
-                foreach (var student in students) {
-                    Grade? sGrade = _context.Grades.FirstOrDefault(grade => grade.Id == student.GradeId);
-                    Batch? sBatch = _context.Batches.FirstOrDefault(batch => batch.Id == student.BatchId);
-                    School? sSchool = _context.Schools.FirstOrDefault(school => school.Id == student.SchoolId);
-
-                    var studentObj = new StudentDTO {
-                        StudentUID = student.StudentUID,
-                        Name = student.Name,
-                        Email = student.Email,
-                        PhoneNumber = student.PhoneNumber,
-                        CityOfOrigin = student.CityOfOrigin,
-                        StateOfOrigin = student.StateOfOrigin,
-                        CountryOfOrigin = student.CountryOfOrigin,
-                        Nationality = student.Nationality,
-                        Grade = sGrade != null ? sGrade.Name : "NULL",
-                        Batch = sBatch != null ? sBatch.Name : "NULL",
-                        School = sSchool != null ? sSchool.Name : "NULL",
-                    };
-                    studentObjects.Add(studentObj);
-                }
+                studentObjects = _context.Students
+                    .Include(s => s.Batch)
+                    .Include(s => s.Grade)
+                    .Include(s => s.School)
+                    .Where(student => student.School == school && student.Grade.Name == grade)
+                    .Select(s => new StudentDTO {
+                        StudentUID = s.StudentUID,
+                        Name = s.Name,
+                        Email = s.Email,
+                        PhoneNumber = s.PhoneNumber,
+                        CityOfOrigin = s.CityOfOrigin,
+                        StateOfOrigin = s.StateOfOrigin,
+                        CountryOfOrigin = s.CountryOfOrigin,
+                        Nationality = s.Nationality,
+                        Batch = s.Batch != null ? s.Batch.Name : "None",
+                        School = s.School.Name,
+                        Grade = s.Grade.Name
+                    })
+                    .ToList();
             }
+
             return studentObjects;
         }
 
-        List<SubscriptionDTO> ISchoolService.GetSchoolSubscriptions(string schoolName) {
+        async Task<List<StudentDTO>> ISchoolService.GetSchoolStudentByGradePaged(string schoolName, string grade, int pageIndex, int pageSize) {
+            var school = await InitSchool(schoolName);
+            var studentObjects = new List<StudentDTO>();
+            if (school != null) {
+                studentObjects = _context.Students
+                    .Include(s => s.Batch)
+                    .Include(s => s.Grade)
+                    .Include(s => s.School)
+                    .Where(student => student.School == school && student.Grade.Name == grade)
+                    .Select(s => new StudentDTO {
+                        StudentUID = s.StudentUID,
+                        Name = s.Name,
+                        Email = s.Email,
+                        PhoneNumber = s.PhoneNumber,
+                        CityOfOrigin = s.CityOfOrigin,
+                        StateOfOrigin = s.StateOfOrigin,
+                        CountryOfOrigin = s.CountryOfOrigin,
+                        Nationality = s.Nationality,
+                        Batch = s.Batch != null ? s.Batch.Name : "None",
+                        School = s.School.Name,
+                        Grade = s.Grade.Name
+                    })
+                    .Skip((pageIndex - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
+            }
+
+            return studentObjects;
+        }
+
+        async Task<List<StudentDTO>> ISchoolService.GetSchoolStudentByBatch(string schoolName, string batch) {
+            var school = await InitSchool(schoolName);
+            var studentObjects = new List<StudentDTO>();
+            if (school != null) {
+                studentObjects = _context.Students
+                    .Include(s => s.Batch)
+                    .Include(s => s.Grade)
+                    .Include(s => s.School)
+                    .Where(
+                        student => student.School == school 
+                     && student.Batch != null 
+                     && student.Batch.Name == batch
+                    )
+                    .Select(s => new StudentDTO {
+                        StudentUID = s.StudentUID,
+                        Name = s.Name,
+                        Email = s.Email,
+                        PhoneNumber = s.PhoneNumber,
+                        CityOfOrigin = s.CityOfOrigin,
+                        StateOfOrigin = s.StateOfOrigin,
+                        CountryOfOrigin = s.CountryOfOrigin,
+                        Nationality = s.Nationality,
+                        Batch = s.Batch != null ? s.Batch.Name : "None",
+                        School = s.School.Name,
+                        Grade = s.Grade.Name
+                    })
+                    .ToList();
+            }
+
+            return studentObjects;
+        }
+
+        async Task<List<StudentDTO>> ISchoolService.GetSchoolStudentByBatchPaged(string schoolName, string batch, int pageIndex, int pageSize) {
+            var school = await InitSchool(schoolName);
+            var studentObjects = new List<StudentDTO>();
+            if (school != null) {
+                studentObjects = _context.Students
+                    .Include(s => s.Batch)
+                    .Include(s => s.Grade)
+                    .Include(s => s.School)
+                    .Where(
+                        student => student.School == school
+                     && student.Batch != null
+                     && student.Batch.Name == batch
+                    )
+                    .Select(s => new StudentDTO {
+                        StudentUID = s.StudentUID,
+                        Name = s.Name,
+                        Email = s.Email,
+                        PhoneNumber = s.PhoneNumber,
+                        CityOfOrigin = s.CityOfOrigin,
+                        StateOfOrigin = s.StateOfOrigin,
+                        CountryOfOrigin = s.CountryOfOrigin,
+                        Nationality = s.Nationality,
+                        Batch = s.Batch != null ? s.Batch.Name : "None",
+                        School = s.School.Name,
+                        Grade = s.Grade.Name
+                    })
+                    .Skip((pageIndex - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
+            }
+
+            return studentObjects;
+        }
+
+        async Task<List<SubscriptionDTO>> ISchoolService.GetSchoolSubscriptions(string schoolName) {
             var school = InitSchool(schoolName);
             var subscriptionObjects = new List<SubscriptionDTO>();
             if (school != null) {
-                var subscriptions = _context.Subscriptions
-                    .Include(subscription => subscription.Schools)
-                    .Where(subscription => subscription.Schools!.Any(s => s.Id == school.Id)).ToList();
-                foreach (var subscription in subscriptions) {
-                    List<string> chapters = _context.Chapters.Where(chapter => chapter.SubscriptionId == subscription.Id)
-                        .Select(chapter => chapter.Title).
-                        ToList();
-
-                    var subscriptionObj = new SubscriptionDTO {
+                subscriptionObjects = await _context.Subscriptions
+                    .Include(s => s.AvailedSchools)
+                    .Where(s => s.AvailedSchools
+                        .Any(a => a.SchoolId == school.Id))
+                    .Select(subscription => new SubscriptionDTO {
                         Type = subscription.Type,
                         Name = subscription.Name,
                         Description = subscription.Description,
-                        IncludedChapters = chapters,
-                    };
-                    subscriptionObjects.Add(subscriptionObj);
-                }
+                        IncludedChapters = subscription.Chapters.Select(c => c.Title).ToList(),
+                    })
+                    .ToListAsync();
             }
             return subscriptionObjects;
         }
 
-        List<SubscriptionDTO> ISchoolService.GetSchoolSubscriptionsByPage(string schoolName, int pageIndex, int pageSize) {
-            var school = InitSchool(schoolName);
-            var subscriptionObjects = new List<SubscriptionDTO>();
-            if (school != null) {
-                var subscriptions = _context.Subscriptions
-                   .Include(subscription => subscription.Schools)
-                   .Where(subscription => subscription.Schools!.Any(s => s.Id == school.Id)).ToList()
-                   .Skip((pageIndex - 1) * pageSize)
-                   .Take(pageSize)
-                   .ToList();
-                foreach (var subscription in subscriptions) {
-                    List<string> chapters = _context.Chapters.Where(chapter => chapter.SubscriptionId == subscription.Id)
-                        .Select(chapter => chapter.Title).
-                        ToList();
-
-                    var subscriptionObj = new SubscriptionDTO {
-                        Type = subscription.Type,
-                        Name = subscription.Name,
-                        Description = subscription.Description,
-                        IncludedChapters = chapters,
-                    };
-                    subscriptionObjects.Add(subscriptionObj);
-                }
-            }
-            return subscriptionObjects;
-        }
-
-        List<BatchDTO> ISchoolService.GetSchoolBatches(string schoolName) {
-            var school = InitSchool(schoolName);
-            var batchObjects = new List<BatchDTO>();
-            if (school != null) {
-                var batches = _context.Batches.Where(batch => batch.SchoolId == school.Id).ToList();
-                foreach (var batch in batches) {
-                    List<string> subjects = _context.Subjects.Where(subject => subject.Batches.Any(b => b.Id == batch.Id))
-                        .Select(subject => subject.Name)
-                        .ToList();
-                    string grade = _context.Grades.FirstOrDefault(grade => grade.Id == batch.GradeId)?.Name ?? "NULL";
-
-                    var batchObj = new BatchDTO {
-                        Name = batch.Name,
-                        Grade = grade,
-                        Subjects = subjects,
-                    };
-                    batchObjects.Add(batchObj);
-                }
-            }
-            return batchObjects;
-        }
-
-        List<BatchDTO> ISchoolService.GetSchoolBatchesByPage(string schoolName, int pageIndex, int pageSize) {
-            var school = InitSchool(schoolName);
-            var batchObjects = new List<BatchDTO>();
-            if (school != null) {
-                var batches = _context.Batches.Where(batch => batch.SchoolId == school.Id).Skip((pageIndex - 1) * pageSize).Take(pageSize).ToList();
-                foreach (var batch in batches) {
-                    List<string> subjects = _context.Subjects.Where(subject => subject.Batches.Any(b => b.Id == batch.Id))
-                        .Select(subject => subject.Name)
-                        .ToList();
-                    string grade = _context.Grades.FirstOrDefault(grade => grade.Id == batch.GradeId)?.Name ?? "NULL";
-
-                    var batchObj = new BatchDTO {
-                        Name = batch.Name,
-                        Grade = grade,
-                        Subjects = subjects,
-                    };
-                    batchObjects.Add(batchObj);
-                }
-            }
-            return batchObjects;
-        }
-
-        List<Payment> ISchoolService.GetSchoolPayments(string schoolName) {
-            var school = InitSchool(schoolName);
-            var payments = new List<Payment>();
-            payments = _context.Payments
+        async Task<List<BillingDTO>> ISchoolService.GetSchoolBillings(string schoolName) {
+            var school = await InitSchool(schoolName);
+            var payments = new List<BillingDTO>();
+            var pays = _context.Payments
                 .Where(payment => payment.SchoolId == school!.Id)
                 .OrderByDescending(payment => payment.Id)
                 .ToList();
+
+            foreach(var pay in pays) {
+                var payment = new BillingDTO {
+                    status = pay.Status,
+                    dueDate = pay.DueDate,
+                    Amount = pay.Amount,
+                    Details = pay.Details,
+                    School = school!.Name
+                }; 
+            }
             return payments;
         }
 
-        List<Payment> ISchoolService.GetSchoolPaymentsByPage(string schoolName, int pageIndex, int pageSize) {
-            var school = InitSchool(schoolName);
-            var payments = new List<Payment>();
-            payments = _context.Payments
+        async Task<List<BillingDTO>> ISchoolService.GetSchoolBillingsByPage(string schoolName, int pageIndex, int pageSize) {
+            var school = await InitSchool(schoolName);
+            var payments = new List<BillingDTO>();
+            var pays = _context.Payments
                 .Where(payment => payment.SchoolId == school!.Id)
                 .OrderByDescending(payment => payment.Id)
                 .Skip((pageIndex - 1) * pageSize)
                 .Take(pageSize)
                 .ToList();
+
+            foreach (var pay in pays) {
+                var payment = new BillingDTO {
+                    status = pay.Status,
+                    dueDate = pay.DueDate,
+                    Amount = pay.Amount,
+                    Details = pay.Details,
+                    School = school!.Name
+                };
+            }
             return payments;
         }
 
-        async Task<bool> ISchoolService.AddStudents(List<StudentDTO> studentObjects, string schoolName) {
-            var school = InitSchool(schoolName);
-
+        async Task<bool> ISchoolService.AddStudents(List<StudentDTO> studentObjects, string batchName) {
+         
             var studentList = new List<Student>();
             foreach (var studentObj in studentObjects) {
-                var sGrade = await _context.Grades.FirstOrDefaultAsync(grade => grade.Name == studentObj.Grade);
-                var SBatch = await _context.Batches.FirstOrDefaultAsync(batch => batch.Name == studentObj.Batch && batch.SchoolId == school!.Id);
-                var sSchool = await _context.Schools.FirstOrDefaultAsync(school => school.Name == schoolName);
+                var SBatch = await _context.Batches
+                    .FirstOrDefaultAsync(batch => batch.Name == batchName);
 
-                if (sGrade == null || SBatch == null || sSchool == null) {
+                if (SBatch == null) {
                     return false;
                 }
 
@@ -262,12 +314,8 @@ namespace PancakeAuthBackend.Services {
                     StateOfOrigin = studentObj.StateOfOrigin,
                     CountryOfOrigin = studentObj.CountryOfOrigin,
                     Nationality = studentObj.Nationality,
-                    Grade = sGrade!,
                     Batch = SBatch!,
-                    School = sSchool!,
-                    GradeId = sGrade.Id,
-                    BatchId = SBatch.Id,
-                    SchoolId = sSchool.Id
+                    BatchId = SBatch!.Id,
                 };
                 studentList.Add(s);
 
@@ -278,31 +326,23 @@ namespace PancakeAuthBackend.Services {
         }
 
         async Task<bool> ISchoolService.AddBatch(BatchDTO batchObj, string schoolName) {
-            var school = InitSchool(schoolName);
-            var Grade = await _context.Grades.FirstOrDefaultAsync(grade => grade.Name == batchObj.Grade);
-            var School = await _context.Schools.FirstOrDefaultAsync(school => school.Name == schoolName);
+            var school = await InitSchool(schoolName);
 
-            var subjects = new List<Subject>();
-            foreach (var sub in batchObj.Subjects) {
-                var Subject = await GetSubjectByName(sub);
-                if (Subject == null) {
+            var students = new List<Student>();
+            foreach(var stu in batchObj.Students) {
+                var st = await _context.Students
+                    .Include(s => s.School.Name)
+                    .FirstOrDefaultAsync(s => s.Name == stu);
+                if(st == null) {
                     return false;
                 }
-                subjects.Add(Subject);
-            }
-
-            if (Grade == null || School == null) {
-                return false;
+                students.Add(st);
             }
 
             // Make new batch from DTO
             var batch = new Batch {
                 Name = batchObj.Name,
-                Grade = Grade,
-                School = School,
-                Subjects = subjects,
-                GradeId = Grade!.Id,
-                SchoolId = School!.Id,
+                Students = students
             };
 
             await _context.Batches.AddAsync(batch);
@@ -310,21 +350,28 @@ namespace PancakeAuthBackend.Services {
             return true;
         }
 
-        async Task<bool> ISchoolService.EditStudent(StudentDTO studentObj, string schoolName) {
-            var s = await _context.Students.FirstOrDefaultAsync(s => 
-                s.Name == studentObj.Name
-             || s.StudentUID == studentObj.StudentUID  
-             || s.Email == studentObj.Email);
+        async Task<bool> ISchoolService.EditStudent(StudentDTO studentObj, string SSID, string schoolName) {
+            var s = await _context.Students
+                .Include(s => s.School)
+                .FirstOrDefaultAsync(s => 
+                   s.StudentUID == SSID
+                && s.School.Name == schoolName);
 
-            if(s == null) { 
+            if(s is null) { 
                 return false;
             }
-            //make new student from DTO
-            var sGrade = await _context.Grades.FirstOrDefaultAsync(grade => grade.Name == studentObj.Grade);
-            var SBatch = await _context.Batches.FirstOrDefaultAsync(batch => batch.Name == studentObj.Batch);
-            var sSchool = await _context.Schools.FirstOrDefaultAsync(school => school.Name == schoolName);
 
-            if (sGrade == null || SBatch == null || sSchool == null) {
+            //make new student from DTO
+            var SBatch = await _context.Batches
+                .FirstOrDefaultAsync(batch => batch.Name == studentObj.Batch);
+
+            var sGrade = await _context.Grades
+                .FirstOrDefaultAsync(grade => grade.Name == studentObj.Grade);
+
+            var sSchool = await _context.Batches
+                .FirstOrDefaultAsync(school => school.Name == studentObj.School);
+
+            if (sGrade is null || sSchool is null) {
                 return false;
             }
             var student = new Student {
@@ -336,12 +383,8 @@ namespace PancakeAuthBackend.Services {
                 StateOfOrigin = studentObj.StateOfOrigin,
                 CountryOfOrigin = studentObj.CountryOfOrigin,
                 Nationality = studentObj.Nationality,
-                Grade = sGrade!,
-                Batch = SBatch!,
-                School = sSchool!,
-                GradeId = sGrade.Id,
-                BatchId = SBatch.Id,
-                SchoolId = sSchool.Id
+                Batch = SBatch,
+                BatchId = SBatch?.Id
             };
 
             //replace student from db
@@ -351,38 +394,8 @@ namespace PancakeAuthBackend.Services {
             return true;
         }
 
-        async Task<bool> ISchoolService.EditBatch(List<string> subjects, string batchName, string schoolName) {
-            try {
-                var batch = await _context.Batches
-                    .Include(batch => batch.Subjects)
-                    .SingleAsync(b => b.Name == batchName);
-
-                //get subjects
-                var subs = new List<Subject>();
-                foreach (var sub in subjects) {
-                    var Subject = await GetSubjectByName(sub);
-                    if (Subject == null) {
-                        return false;
-                    }
-                   
-                    subs.Add(Subject);
-                }
-
-                //only possible edit made in Batch
-                batch.Subjects = subs;
-
-            }
-            catch (Exception ex) {
-                Console.WriteLine(ex.Message);
-                return false;
-            }
-
-            await _context.SaveChangesAsync();
-            return true;
-        }
-
         async Task<bool> ISchoolService.DeleteStudent(string SUID, string schoolName) {
-            var student = await _context.Students.SingleAsync(student =>  student.StudentUID == SUID);
+            var student = await _context.Students.FirstOrDefaultAsync(student =>  student.StudentUID == SUID);
 
             if(student == null) {
                 return false;
