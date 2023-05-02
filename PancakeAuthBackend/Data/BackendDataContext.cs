@@ -8,9 +8,9 @@ using PancakeAuthBackend.Models;
 
 namespace PancakeAuthBackend.Data {
     public class BackendDataContext : IdentityDbContext<User> {
-        public BackendDataContext() {}
-        public BackendDataContext(DbContextOptions options) 
-            : base(options) {}
+        public BackendDataContext() { }
+        public BackendDataContext(DbContextOptions options)
+            : base(options) { }
 
         public DbSet<Billing> Payments { get; set; }
         public DbSet<Address> Addresses { get; set; }
