@@ -23,11 +23,11 @@ namespace PancakeAuthBackend.Controllers {
                     return Ok(await _accountService.GetToken());
                 }
                 catch(Exception ex) {
-                    _log.LogError("Login", $"Token generator crashed unexplicably. \n {ex.Message} \n {ex.InnerException}");
+                    _log.LogError("Login Token generator crashed unexplicably. \n {ex.Message} \n {ex.InnerException}", ex.Message, ex.InnerException);
                     return Problem(detail: "Login Unsuccessful. Internal Service Error", statusCode: 500);
                 }
             }
-            _log.LogInformation("Account-Service", $"Login-Failed, Could not create token : [{loginDetails.UserName}]");
+            _log.LogInformation("Account-Service Login-Failed, Could not create token : [{loginDetails.UserName}]", loginDetails.UserName);
             return BadRequest();
         }
     }

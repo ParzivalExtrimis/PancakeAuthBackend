@@ -22,14 +22,14 @@ namespace PancakeAuthBackend.Services {
             var claims = await GetClaims();
             var token = GenerateTokenSignature(credentials, claims);
 
-            _logger.LogInformation("Token-Generator", "Token Generation Complete");
+            _logger.LogInformation("Token-Generator - Token Generation Complete");
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
         private JwtSecurityToken GenerateTokenSignature(SigningCredentials credentials, List<Claim> claims) {
             var jwtSettings = _config.GetSection("JWT");
 
-            _logger.LogInformation("Token-Generator", "Token Signed");
+            _logger.LogInformation("Token-Generator - Token Signed");
             return new JwtSecurityToken(
                 issuer: jwtSettings.GetValue<string>("Issuer"),
                 audience: jwtSettings.GetValue<string>("Audience"),
@@ -52,8 +52,9 @@ namespace PancakeAuthBackend.Services {
                 claims.Add(
                     new Claim(ClaimTypes.Role, role)
                 );
+                
             }
-            _logger.LogInformation("Token-Generator", "Claims Added");
+            _logger.LogInformation("Token-Generator - Claims Added");
             return claims;
         }
 
@@ -61,7 +62,7 @@ namespace PancakeAuthBackend.Services {
             var key = _config.GetSection("JWT").GetValue<string>("Key");
             var secret = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
 
-            _logger.LogInformation("Token-Generator", "Credentials Added");
+            _logger.LogInformation("Token-Generator - redentials Added");
             return new SigningCredentials(secret, SecurityAlgorithms.HmacSha256);
         }
 
@@ -71,11 +72,11 @@ namespace PancakeAuthBackend.Services {
             var validLogin = _user != null && await _userManager.CheckPasswordAsync(_user, loginDetails.Password);
 
             if (validLogin) {
-                _logger.LogInformation("SignIn", $"Successfully Signed-In : {loginDetails.UserName}");
+                _logger.LogInformation("SignIn - Successfully Signed-In : {loginDetails.UserName}", loginDetails.UserName);
                 return true;
             }
 
-            _logger.LogInformation("SignIn", $"Sign-In failed : {loginDetails.UserName}");
+            _logger.LogInformation("SignIn - Sign-In failed : {loginDetails.UserName}", loginDetails.UserName);
             return false;
         }
     }

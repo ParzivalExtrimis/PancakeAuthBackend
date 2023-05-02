@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PancakeAuthBackend.Models;
+using System.Security.Claims;
 
 namespace PancakeAuthBackend.Data {
     public class SampleDataSeeder {

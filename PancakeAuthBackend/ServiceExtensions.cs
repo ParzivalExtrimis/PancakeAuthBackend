@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Security.Claims;
 using System.Text;
 
 namespace PancakeAuthBackend {
@@ -140,6 +141,7 @@ namespace PancakeAuthBackend {
                 };
                 var sm = await userManager.CreateAsync(SchoolManagerUser, password);
                 await userManager.AddToRoleAsync(SchoolManagerUser, SchoolManagerRole.Name);
+                await userManager.AddClaimAsync(SchoolManagerUser, new Claim("School", "Hershey"));
             }
         }
     }

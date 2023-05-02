@@ -1,7 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PancakeAuthBackend.Services;
+using System.Reflection.Metadata.Ecma335;
+using System.Security.Claims;
+using System.Text;
 
 namespace PancakeAuthBackend.Controllers {
     [ApiController]
@@ -15,8 +19,15 @@ namespace PancakeAuthBackend.Controllers {
             _db = context;
         }
 
-        [HttpGet("{ssid}")]
-        async public Task<IActionResult> Get(string ssid) {
+        [HttpGet()]
+        async public Task<IActionResult> Get(string? ssid) {
+            //If Student use Auth claim to retrieve student data else use parameter
+            string userRole = User.FindFirstValue(ClaimTypes.Role);
+   
+            if(userRole == "Student") {
+                ssid = User.FindFirstValue(ClaimTypes.Name);
+            }
+
             Log.LogInformation("Student Controller", $"Student access requested [ {ssid} ]");
             var student = await _db.Students
                 .Where(s => s.StudentUID == ssid)
@@ -45,6 +56,7 @@ namespace PancakeAuthBackend.Controllers {
                 Log.LogError("Student Controller", $"Student [{ssid}] wasn't found");
                 return NotFound();
             }
+
             Log.LogInformation("Student Controller", $"Student [{ssid}] retrieved");
             return Ok(student);
         }
