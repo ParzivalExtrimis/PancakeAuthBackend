@@ -57,7 +57,7 @@ namespace PancakeAuthBackend.Services {
             var school = await InitSchool(schoolName);
             var studentObjects = new List<StudentDTO>();
             if (school != null) {
-                studentObjects = _context.Students
+                studentObjects = await _context.Students
                     .Include(s => s.Batch)
                     .Include(s => s.Grade)
                     .Include(s => s.School)
@@ -78,7 +78,7 @@ namespace PancakeAuthBackend.Services {
                         School = s.School.Name,
                         Grade = s.Grade.Name
                     })
-                    .ToList();
+                    .ToListAsync();
             }
 
             return studentObjects;
@@ -88,7 +88,7 @@ namespace PancakeAuthBackend.Services {
             var school = await InitSchool(schoolName);
             var studentObjects = new List<StudentDTO>();
             if (school != null) {
-                studentObjects = _context.Students
+                studentObjects = await _context.Students
                     .Include(s => s.Batch)
                     .Include(s => s.Grade)
                     .Include(s => s.School)
@@ -111,7 +111,7 @@ namespace PancakeAuthBackend.Services {
                     })
                     .Skip((pageIndex - 1) * pageSize)
                     .Take(pageSize)
-                    .ToList();
+                    .ToListAsync();
             }
 
             return studentObjects;
@@ -121,7 +121,7 @@ namespace PancakeAuthBackend.Services {
             var school = await InitSchool(schoolName);
             var studentObjects = new List<StudentDTO>();
             if (school != null) {
-                studentObjects = _context.Students
+                studentObjects = await _context.Students
                     .Include(s => s.Batch)
                     .Include(s => s.Grade)
                     .Include(s => s.School)
@@ -142,7 +142,7 @@ namespace PancakeAuthBackend.Services {
                         School = s.School.Name,
                         Grade = s.Grade.Name
                     })
-                    .ToList();
+                    .ToListAsync();
             }
 
             return studentObjects;
@@ -152,7 +152,7 @@ namespace PancakeAuthBackend.Services {
             var school = await InitSchool(schoolName);
             var studentObjects = new List<StudentDTO>();
             if (school != null) {
-                studentObjects = _context.Students
+                studentObjects = await _context.Students
                     .Include(s => s.Batch)
                     .Include(s => s.Grade)
                     .Include(s => s.School)
@@ -175,7 +175,7 @@ namespace PancakeAuthBackend.Services {
                     })
                     .Skip((pageIndex - 1) * pageSize)
                     .Take(pageSize)
-                    .ToList();
+                    .ToListAsync();
             }
 
             return studentObjects;
@@ -185,7 +185,7 @@ namespace PancakeAuthBackend.Services {
             var school = await InitSchool(schoolName);
             var studentObjects = new List<StudentDTO>();
             if (school != null) {
-                studentObjects = _context.Students
+                studentObjects = await _context.Students
                     .Include(s => s.Batch)
                     .Include(s => s.Grade)
                     .Include(s => s.School)
@@ -210,7 +210,7 @@ namespace PancakeAuthBackend.Services {
                         School = s.School.Name,
                         Grade = s.Grade.Name
                     })
-                    .ToList();
+                    .ToListAsync();
             }
 
             return studentObjects;
@@ -220,7 +220,7 @@ namespace PancakeAuthBackend.Services {
             var school = await InitSchool(schoolName);
             var studentObjects = new List<StudentDTO>();
             if (school != null) {
-                studentObjects = _context.Students
+                studentObjects = await _context.Students
                     .Include(s => s.Batch)
                     .Include(s => s.Grade)
                     .Include(s => s.School)
@@ -247,7 +247,7 @@ namespace PancakeAuthBackend.Services {
                     })
                     .Skip((pageIndex - 1) * pageSize)
                     .Take(pageSize)
-                    .ToList();
+                    .ToListAsync();
             }
 
             return studentObjects;
@@ -275,10 +275,10 @@ namespace PancakeAuthBackend.Services {
         async Task<List<BillingDTO>> ISchoolService.GetSchoolBillings(string schoolName) {
             var school = await InitSchool(schoolName);
             var payments = new List<BillingDTO>();
-            var pays = _context.Payments
+            var pays = await _context.Payments
                 .Where(payment => payment.SchoolId == school!.Id)
                 .OrderByDescending(payment => payment.Id)
-                .ToList();
+                .ToListAsync();
 
             foreach(var pay in pays) {
                 var payment = new BillingDTO {
@@ -295,12 +295,12 @@ namespace PancakeAuthBackend.Services {
         async Task<List<BillingDTO>> ISchoolService.GetSchoolBillingsByPage(string schoolName, int pageIndex, int pageSize) {
             var school = await InitSchool(schoolName);
             var payments = new List<BillingDTO>();
-            var pays = _context.Payments
+            var pays = await _context.Payments
                 .Where(payment => payment.SchoolId == school!.Id)
                 .OrderByDescending(payment => payment.Id)
                 .Skip((pageIndex - 1) * pageSize)
                 .Take(pageSize)
-                .ToList();
+                .ToListAsync();
 
             foreach (var pay in pays) {
                 var payment = new BillingDTO {
