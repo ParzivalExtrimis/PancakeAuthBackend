@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PancakeAuthBackend.Models;
 using System.Collections.Generic;
@@ -8,8 +9,10 @@ using System.Reflection.Metadata.Ecma335;
 namespace PancakeAuthBackend.Services {
     public class SchoolService : ISchoolService {
         readonly BackendDataContext _context;
-        public SchoolService(BackendDataContext context) {
+        readonly UserManager<User> _user;
+        public SchoolService(BackendDataContext context, UserManager<User> userManager) {
             _context = context;
+            _user = userManager;
         }
 
         //util
@@ -58,10 +61,13 @@ namespace PancakeAuthBackend.Services {
                     .Include(s => s.Batch)
                     .Include(s => s.Grade)
                     .Include(s => s.School)
+                    .Include(s => s.User)
                     .Where(student => student.School == school)
                     .Select(s => new StudentDTO {
                         StudentUID = s.StudentUID,
                         Name = s.Name,
+                        FirstName = s.User.FirstName ?? "",
+                        LastName = s.User.LastName ?? "",
                         Email = s.Email,
                         PhoneNumber = s.PhoneNumber,
                         CityOfOrigin = s.CityOfOrigin,
@@ -86,10 +92,13 @@ namespace PancakeAuthBackend.Services {
                     .Include(s => s.Batch)
                     .Include(s => s.Grade)
                     .Include(s => s.School)
+                    .Include(s => s.User)
                     .Where(student => student.School == school)
                     .Select(s => new StudentDTO {
                         StudentUID = s.StudentUID,
                         Name = s.Name,
+                        FirstName = s.User.FirstName ?? "",
+                        LastName = s.User.LastName ?? "",
                         Email = s.Email,
                         PhoneNumber = s.PhoneNumber,
                         CityOfOrigin = s.CityOfOrigin,
@@ -116,10 +125,13 @@ namespace PancakeAuthBackend.Services {
                     .Include(s => s.Batch)
                     .Include(s => s.Grade)
                     .Include(s => s.School)
+                    .Include(s => s.User)
                     .Where(student => student.School == school && student.Grade.Name == grade)
                     .Select(s => new StudentDTO {
                         StudentUID = s.StudentUID,
                         Name = s.Name,
+                        FirstName = s.User.FirstName ?? "",
+                        LastName = s.User.LastName ?? "",
                         Email = s.Email,
                         PhoneNumber = s.PhoneNumber,
                         CityOfOrigin = s.CityOfOrigin,
@@ -144,9 +156,12 @@ namespace PancakeAuthBackend.Services {
                     .Include(s => s.Batch)
                     .Include(s => s.Grade)
                     .Include(s => s.School)
+                    .Include(s => s.User)
                     .Where(student => student.School == school && student.Grade.Name == grade)
                     .Select(s => new StudentDTO {
                         StudentUID = s.StudentUID,
+                        FirstName = s.User.FirstName ?? "",
+                        LastName = s.User.LastName ?? "",
                         Name = s.Name,
                         Email = s.Email,
                         PhoneNumber = s.PhoneNumber,
@@ -174,6 +189,7 @@ namespace PancakeAuthBackend.Services {
                     .Include(s => s.Batch)
                     .Include(s => s.Grade)
                     .Include(s => s.School)
+                    .Include(s => s.User)
                     .Where(
                         student => student.School == school 
                      && student.Batch != null 
@@ -182,6 +198,8 @@ namespace PancakeAuthBackend.Services {
                     .Select(s => new StudentDTO {
                         StudentUID = s.StudentUID,
                         Name = s.Name,
+                        FirstName = s.User.FirstName ?? "",
+                        LastName = s.User.LastName ?? "",
                         Email = s.Email,
                         PhoneNumber = s.PhoneNumber,
                         CityOfOrigin = s.CityOfOrigin,
@@ -206,6 +224,7 @@ namespace PancakeAuthBackend.Services {
                     .Include(s => s.Batch)
                     .Include(s => s.Grade)
                     .Include(s => s.School)
+                    .Include(s => s.User)
                     .Where(
                         student => student.School == school
                      && student.Batch != null
@@ -214,6 +233,8 @@ namespace PancakeAuthBackend.Services {
                     .Select(s => new StudentDTO {
                         StudentUID = s.StudentUID,
                         Name = s.Name,
+                        FirstName = s.User.FirstName ?? "",
+                        LastName = s.User.LastName ?? "",
                         Email = s.Email,
                         PhoneNumber = s.PhoneNumber,
                         CityOfOrigin = s.CityOfOrigin,
@@ -293,29 +314,44 @@ namespace PancakeAuthBackend.Services {
             return payments;
         }
 
-        async Task<bool> ISchoolService.AddStudents(List<StudentDTO> studentObjects, string batchName) {
-         
+        async Task<bool> ISchoolService.AddStudents(string schoolName, List<StudentDTO> studentObjects) {
+            var school = await InitSchool(schoolName);
             var studentList = new List<Student>();
             foreach (var studentObj in studentObjects) {
                 var SBatch = await _context.Batches
-                    .FirstOrDefaultAsync(batch => batch.Name == batchName);
+                    .FirstOrDefaultAsync(batch => studentObj.Batch != null && batch.Name == studentObj.Batch);
 
-                if (SBatch == null) {
+                var SGrade = await _context.Grades
+                    .FirstOrDefaultAsync(grade => grade.Name == studentObj.Grade);
+               
+                if (SGrade == null || school == null) {
                     return false;
                 }
+
+                var studentUser = new User {
+                    UserName = studentObj.StudentUID,
+                    FirstName = studentObj.FirstName,
+                    LastName = studentObj.LastName,
+                    Email = studentObj.Email,
+                    PhoneNumber = studentObj.PhoneNumber,
+                };
+                await _user.CreateAsync(studentUser, studentObj.Password);
+                await _user.AddToRoleAsync(studentUser, "Student");
+
 
                 // Add to Student Contexted object and make a list of them
                 var s = new Student {
                     StudentUID = studentObj.StudentUID,
-                    Name = studentObj.Name,
+                    Name = studentObj.FirstName + " " + studentObj.LastName,
                     Email = studentObj.Email,
                     PhoneNumber = studentObj.PhoneNumber,
                     CityOfOrigin = studentObj.CityOfOrigin,
                     StateOfOrigin = studentObj.StateOfOrigin,
                     CountryOfOrigin = studentObj.CountryOfOrigin,
                     Nationality = studentObj.Nationality,
-                    Batch = SBatch!,
-                    BatchId = SBatch!.Id,
+                    Batch = SBatch,
+                    Grade = SGrade,
+                    School = school
                 };
                 studentList.Add(s);
 

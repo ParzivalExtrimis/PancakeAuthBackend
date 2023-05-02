@@ -18,6 +18,7 @@ namespace PancakeAuthBackend.Models {
 
         [Column(TypeName = "varchar(50)")]
         public string PhoneNumber { get; set; } = null!;
+        public User User { get; set; } = null!;
 
         [Column(TypeName = "varchar(100)")]
         public string CityOfOrigin { get; set; } = null!;

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -6,6 +7,7 @@ using PancakeAuthBackend.Services;
 
 namespace PancakeAuthBackend.Controllers {
     [Route("api/[controller]")]
+    [Authorize(Policy = "AdminAccess")]
     [ApiController]
     public class AdminController : ControllerBase {
         private readonly IAdminService _AdminService;

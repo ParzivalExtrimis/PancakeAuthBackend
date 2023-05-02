@@ -20,7 +20,7 @@ namespace PancakeAuthBackend.Services {
         Task<List<BillingDTO>> GetSchoolBillingsByPage(string schoolName, int pageIndex, int pageSize);
 
         //POST services 
-        Task<bool> AddStudents(List<StudentDTO> studentObjects, string batchName);
+        Task<bool> AddStudents(string schoolName, List<StudentDTO> studentObjects);
         Task<bool> AddBatch(BatchDTO batchObj, string schoolName);
 
         //PUT servics
