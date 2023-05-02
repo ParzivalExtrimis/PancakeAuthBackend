@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PancakeAuthBackend.Data;
 
@@ -11,9 +12,11 @@ using PancakeAuthBackend.Data;
 namespace PancakeAuthBackend.Migrations
 {
     [DbContext(typeof(BackendDataContext))]
-    partial class BackendDataContextModelSnapshot : ModelSnapshot
+    [Migration("20230428150620_UsersAddedToStudentAndSchoolTables")]
+    partial class UsersAddedToStudentAndSchoolTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -190,6 +193,38 @@ namespace PancakeAuthBackend.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Addresses");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            City = "Hershey",
+                            Country = "USA",
+                            PostalCode = "2456-82",
+                            Region = "Downtown",
+                            State = "Pennsylvania",
+                            StreetName = "Wagner Street #22"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            City = "NYC",
+                            Country = "USA",
+                            PostalCode = "1155-82",
+                            Region = "Bronx",
+                            State = "New York",
+                            StreetName = "Browning Ave"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            City = "Birmingham",
+                            Country = "UK",
+                            PostalCode = "S4356",
+                            Region = "Central England",
+                            State = "England",
+                            StreetName = "Turing Street, 35th Avenue"
+                        });
                 });
 
             modelBuilder.Entity("PancakeAuthBackend.Models.AvailedSubscription", b =>
@@ -205,6 +240,38 @@ namespace PancakeAuthBackend.Migrations
                     b.HasIndex("SubscriptionId");
 
                     b.ToTable("AvailedSubscription");
+
+                    b.HasData(
+                        new
+                        {
+                            SchoolId = 1,
+                            SubscriptionId = 1
+                        },
+                        new
+                        {
+                            SchoolId = 1,
+                            SubscriptionId = 2
+                        },
+                        new
+                        {
+                            SchoolId = 1,
+                            SubscriptionId = 3
+                        },
+                        new
+                        {
+                            SchoolId = 2,
+                            SubscriptionId = 1
+                        },
+                        new
+                        {
+                            SchoolId = 2,
+                            SubscriptionId = 2
+                        },
+                        new
+                        {
+                            SchoolId = 3,
+                            SubscriptionId = 1
+                        });
                 });
 
             modelBuilder.Entity("PancakeAuthBackend.Models.Batch", b =>
@@ -227,6 +294,44 @@ namespace PancakeAuthBackend.Migrations
                     b.HasIndex("SchoolId");
 
                     b.ToTable("Batches");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "5A",
+                            SchoolId = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "7A",
+                            SchoolId = 1
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Name = "2A",
+                            SchoolId = 2
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Name = "3A",
+                            SchoolId = 2
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Name = "5B",
+                            SchoolId = 3
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Name = "7B",
+                            SchoolId = 3
+                        });
                 });
 
             modelBuilder.Entity("PancakeAuthBackend.Models.Billing", b =>
@@ -258,6 +363,53 @@ namespace PancakeAuthBackend.Migrations
                     b.HasIndex("SchoolId");
 
                     b.ToTable("Payments");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Amount = 156200,
+                            Details = "Billed on 6 subscriptions. First Availed on the date 12/11/22",
+                            DueDate = new DateTime(2023, 4, 28, 20, 36, 20, 149, DateTimeKind.Local).AddTicks(3556),
+                            SchoolId = 1,
+                            Status = "Pending"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Amount = 23900,
+                            Details = "Billed on 1 subscription(s). First Availed on the date 09/10/22",
+                            DueDate = new DateTime(2023, 4, 28, 20, 36, 20, 149, DateTimeKind.Local).AddTicks(3568),
+                            SchoolId = 1,
+                            Status = "Completed"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Amount = 78650,
+                            Details = "Billed on 4 subscription(s). First Availed on the date 04/12/22",
+                            DueDate = new DateTime(2023, 4, 28, 20, 36, 20, 149, DateTimeKind.Local).AddTicks(3569),
+                            SchoolId = 2,
+                            Status = "Pending"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Amount = 245790,
+                            Details = "Billed on 8 subscription(s). First Availed on the date 02/01/23",
+                            DueDate = new DateTime(2023, 4, 28, 20, 36, 20, 149, DateTimeKind.Local).AddTicks(3570),
+                            SchoolId = 3,
+                            Status = "Pending"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Amount = 156200,
+                            Details = "Billed on 6 subscriptions. First Availed on the date 01/02/23",
+                            DueDate = new DateTime(2023, 4, 28, 20, 36, 20, 149, DateTimeKind.Local).AddTicks(3571),
+                            SchoolId = 3,
+                            Status = "Completed"
+                        });
                 });
 
             modelBuilder.Entity("PancakeAuthBackend.Models.Chapter", b =>
@@ -287,6 +439,50 @@ namespace PancakeAuthBackend.Migrations
                         .IsUnique();
 
                     b.ToTable("Chapters");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Description = "Intro to Newtonian Gravitation",
+                            SubjectId = 1,
+                            Title = "Gravity"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Description = "Intro to Thermodynamics",
+                            SubjectId = 1,
+                            Title = "Thermodynamics"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Description = "Intro to Kinematics",
+                            SubjectId = 1,
+                            Title = "Kinematics"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Description = "Intro to Matrix Manipulation",
+                            SubjectId = 2,
+                            Title = "Matrices"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Description = "Intro to 2D Vectors",
+                            SubjectId = 2,
+                            Title = "Vectors"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Description = "Intro to Organic Chemistry",
+                            SubjectId = 3,
+                            Title = "Organic Chemistry"
+                        });
                 });
 
             modelBuilder.Entity("PancakeAuthBackend.Models.ChaptersIncluded", b =>
@@ -302,6 +498,48 @@ namespace PancakeAuthBackend.Migrations
                     b.HasIndex("SubscriptionId");
 
                     b.ToTable("ChaptersIncluded");
+
+                    b.HasData(
+                        new
+                        {
+                            ChapterId = 1,
+                            SubscriptionId = 1
+                        },
+                        new
+                        {
+                            ChapterId = 4,
+                            SubscriptionId = 1
+                        },
+                        new
+                        {
+                            ChapterId = 6,
+                            SubscriptionId = 1
+                        },
+                        new
+                        {
+                            ChapterId = 4,
+                            SubscriptionId = 2
+                        },
+                        new
+                        {
+                            ChapterId = 5,
+                            SubscriptionId = 2
+                        },
+                        new
+                        {
+                            ChapterId = 1,
+                            SubscriptionId = 3
+                        },
+                        new
+                        {
+                            ChapterId = 2,
+                            SubscriptionId = 3
+                        },
+                        new
+                        {
+                            ChapterId = 3,
+                            SubscriptionId = 3
+                        });
                 });
 
             modelBuilder.Entity("PancakeAuthBackend.Models.Grade", b =>
@@ -322,6 +560,68 @@ namespace PancakeAuthBackend.Migrations
                         .IsUnique();
 
                     b.ToTable("Grades");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "1"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "2"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Name = "3"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Name = "4"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Name = "5"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Name = "6"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Name = "7"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Name = "8"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            Name = "9"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            Name = "10"
+                        },
+                        new
+                        {
+                            Id = 11,
+                            Name = "11"
+                        },
+                        new
+                        {
+                            Id = 12,
+                            Name = "12"
+                        });
                 });
 
             modelBuilder.Entity("PancakeAuthBackend.Models.School", b =>
@@ -353,6 +653,26 @@ namespace PancakeAuthBackend.Migrations
                     b.HasIndex("SchoolManagerId");
 
                     b.ToTable("Schools");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            AddressId = 1,
+                            Name = "Hershey"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            AddressId = 2,
+                            Name = "Jefferson High"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            AddressId = 3,
+                            Name = "Hawthrone Elementary"
+                        });
                 });
 
             modelBuilder.Entity("PancakeAuthBackend.Models.Student", b =>
@@ -405,7 +725,6 @@ namespace PancakeAuthBackend.Migrations
                         .HasColumnType("varchar(50)");
 
                     b.Property<string>("UserId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
@@ -428,6 +747,98 @@ namespace PancakeAuthBackend.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Students");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            BatchId = 1,
+                            CityOfOrigin = "Orlando",
+                            CountryOfOrigin = "US",
+                            Email = "Jon@TonightShow.com",
+                            GradeId = 5,
+                            Name = "Jon Stewart",
+                            Nationality = "American",
+                            PhoneNumber = "555-7896",
+                            SchoolId = 1,
+                            StateOfOrigin = "Florida",
+                            StudentUID = "1HE234089"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            BatchId = 3,
+                            CityOfOrigin = "Detroit",
+                            CountryOfOrigin = "US",
+                            Email = "green@barrel.com",
+                            GradeId = 2,
+                            Name = "Millie Dyer",
+                            Nationality = "American",
+                            PhoneNumber = "555-2561",
+                            SchoolId = 2,
+                            StateOfOrigin = "Michigan",
+                            StudentUID = "1JE768901"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            BatchId = 6,
+                            CityOfOrigin = "Jersey City",
+                            CountryOfOrigin = "US",
+                            Email = "Braazen@fox.com",
+                            GradeId = 7,
+                            Name = "Corey Black",
+                            Nationality = "American",
+                            PhoneNumber = "555-8576",
+                            SchoolId = 3,
+                            StateOfOrigin = "New Jersey",
+                            StudentUID = "1HT234586"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            BatchId = 1,
+                            CityOfOrigin = "Tuscon",
+                            CountryOfOrigin = "US",
+                            Email = "Dana@Verasity.com",
+                            GradeId = 5,
+                            Name = "Dana White",
+                            Nationality = "American",
+                            PhoneNumber = "555-1111",
+                            SchoolId = 1,
+                            StateOfOrigin = "Arizona",
+                            StudentUID = "1HE456456"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            BatchId = 1,
+                            CityOfOrigin = "Miami",
+                            CountryOfOrigin = "US",
+                            Email = "Power@Ranger.com",
+                            GradeId = 5,
+                            Name = "Blake Shelling",
+                            Nationality = "American",
+                            PhoneNumber = "555-7905",
+                            SchoolId = 1,
+                            StateOfOrigin = "Florida",
+                            StudentUID = "1HE093455"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            BatchId = 2,
+                            CityOfOrigin = "Seattle",
+                            CountryOfOrigin = "US",
+                            Email = "dark@detective.com",
+                            GradeId = 7,
+                            Name = "Naomi Wattson",
+                            Nationality = "American",
+                            PhoneNumber = "555-5467",
+                            SchoolId = 1,
+                            StateOfOrigin = "Washington",
+                            StudentUID = "1HE890123"
+                        });
                 });
 
             modelBuilder.Entity("PancakeAuthBackend.Models.Subject", b =>
@@ -448,6 +859,23 @@ namespace PancakeAuthBackend.Migrations
                         .IsUnique();
 
                     b.ToTable("Subjects");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "Physics"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "Math"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Name = "Chemistry"
+                        });
                 });
 
             modelBuilder.Entity("PancakeAuthBackend.Models.Subscription", b =>
@@ -476,6 +904,29 @@ namespace PancakeAuthBackend.Migrations
                         .IsUnique();
 
                     b.ToTable("Subscriptions");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Description = "Standard Subscription",
+                            Name = "Default",
+                            Type = "Included"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Description = "Added Modules for Math",
+                            Name = "Math Magic",
+                            Type = "Add-On"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Description = "Added Modules for Physics",
+                            Name = "Physics Booster",
+                            Type = "Add-On"
+                        });
                 });
 
             modelBuilder.Entity("PancakeAuthBackend.Models.User", b =>
@@ -724,9 +1175,7 @@ namespace PancakeAuthBackend.Migrations
 
                     b.HasOne("PancakeAuthBackend.Models.User", "User")
                         .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UserId");
 
                     b.Navigation("Batch");
 

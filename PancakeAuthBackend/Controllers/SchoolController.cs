@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query.Internal;
@@ -8,6 +9,7 @@ using System.Reflection.Metadata.Ecma335;
 
 namespace PancakeAuthBackend.Controllers {
     [Route("api/[controller]")]
+    [Authorize(Policy = "SchoolAccess")]
     [ApiController]
     public class SchoolController : ControllerBase {
         private readonly ISchoolService _schoolService;
@@ -120,7 +122,7 @@ namespace PancakeAuthBackend.Controllers {
 
             var studentList = new List<StudentDTO>(students);
             try {
-                return await _schoolService.AddStudents(studentList, schoolName)
+                return await _schoolService.AddStudents(schoolName, studentList)
               ? new OkObjectResult("Student(s) Added Successfully")
               : new BadRequestObjectResult("Students could not be added. Provide a correctly formatted JSON.");
             }

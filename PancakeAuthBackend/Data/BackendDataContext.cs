@@ -1,13 +1,16 @@
 ﻿using Azure;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.Hosting;
 using PancakeAuthBackend.Models;
 
 namespace PancakeAuthBackend.Data {
     public class BackendDataContext : IdentityDbContext<User> {
-        public BackendDataContext() {}
-        public BackendDataContext(DbContextOptions options) : base(options) {}
+        public BackendDataContext() { }
+        public BackendDataContext(DbContextOptions options)
+            : base(options) { }
 
         public DbSet<Billing> Payments { get; set; }
         public DbSet<Address> Addresses { get; set; }
@@ -18,6 +21,8 @@ namespace PancakeAuthBackend.Data {
         public DbSet<Student> Students { get; set; }
         public DbSet<Subject> Subjects { get; set; }
         public DbSet<Subscription> Subscriptions { get; set; }
+        public DbSet<AvailedSubscription> AvailedSubscription { get; set; }
+        public DbSet<ChaptersIncluded> ChaptersIncluded { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder) {
             base.OnModelCreating(modelBuilder);
@@ -115,8 +120,6 @@ namespace PancakeAuthBackend.Data {
               .WithMany(sub => sub.Chapters)
               .UsingEntity<ChaptersIncluded>();
 
-            //sample data
-            SampleDataSeeder.Seed(modelBuilder);
         }
     }
 }

@@ -7,6 +7,11 @@ namespace PancakeAuthBackend.Models {
 
         [Column(TypeName = "varchar(100)")]
         public string Name { get; set; } = null!;
+        public User SchoolManager { get; set; } = null!;
+        [ForeignKey("CoSMSchoolId")]
+        public List<User>? CoSchoolManagers { get; set; } 
+        [ForeignKey("ClassManagerSchoolId")]
+        public List<User>? ClassManagers { get; set; } 
         public ICollection<Student>? Students { get; set; }
         public ICollection<Subscription>? Subscriptions { get; set; }
         public ICollection<AvailedSubscription>? AvailedSubscriptions { get; set; }

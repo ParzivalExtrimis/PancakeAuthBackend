@@ -7,6 +7,8 @@ namespace PancakeAuthBackend.Models {
 
         [Column(TypeName = "varchar(100)")]
         public string Name { get; set; } = null!;
+        [ForeignKey("ClassManagerGradeId")]
+        public List<User>? ClassManager { get; set; }
         public ICollection<Student>? Students { get; set; }
     }
 }

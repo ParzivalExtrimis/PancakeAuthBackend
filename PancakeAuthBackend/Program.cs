@@ -23,9 +23,11 @@ var Configuration = builder.Configuration;
 builder.Services.AddControllers();
 builder.Services.AddTransient<ISchoolService, SchoolService>();
 builder.Services.AddTransient<IAdminService, AdminService>();
+builder.Services.AddScoped<IAccountService, AccountService>();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerDoc();
 
 builder.Services.AddDbContext<BackendDataContext>((options) => {
     options.UseSqlServer(Configuration.GetConnectionString("Default"));
@@ -33,23 +35,16 @@ builder.Services.AddDbContext<BackendDataContext>((options) => {
     options.EnableSensitiveDataLogging();
 });
 
+builder.Services.ConfigureJWTAuthentication(Configuration);
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options => {
-        options.TokenValidationParameters = new TokenValidationParameters() {
-            ValidateIssuer = true,
-            ValidateLifetime = true,
-            ValidateAudience = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = Configuration["Jwt:Issuer"],
-            ValidAudience = Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-                Configuration["Jwt:Key"]))
-        };
+builder.Services.AddCors(o => {
+    o.AddPolicy("AllowAll", policyBuilder => {
+        policyBuilder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
     });
+});
 
 builder.Services.ConfigureIdentity();
-builder.Services.AddAuthorization();
+builder.Services.ConfigureAuthorization();
 
 var app = builder.Build();
 
@@ -60,6 +55,20 @@ if (app.Environment.IsDevelopment()) {
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("AllowAll");
+
+using (var scope = app.Services.CreateScope()) {
+    var dbContext = scope.ServiceProvider.GetRequiredService<BackendDataContext>();
+    var Seeder = new SampleDataSeeder(dbContext, scope, Configuration);
+
+    // Seed tables
+    await dbContext.Database.EnsureDeletedAsync();
+    await dbContext.Database.EnsureCreatedAsync();
+    
+    await scope.SeedIdentity();
+    await Seeder.SeedAsync();
+};
 
 app.UseAuthentication();
 
