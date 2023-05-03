@@ -4,17 +4,17 @@ using PancakeAuthBackend.Models;
 using System.Security.Claims;
 
 namespace PancakeAuthBackend.Data {
-    public class SampleDataSeeder {
+    public class SampleDataSeeder : ISampleDataSeeder {
         private readonly BackendDataContext _context;
         private readonly IConfiguration _config;
         private readonly UserManager<User> _userManager;
 
-        public SampleDataSeeder(BackendDataContext context, IServiceScope scope, IConfiguration config) {
+        public SampleDataSeeder(BackendDataContext context, UserManager<User> userManager, IConfiguration config) {
             _context = context;
             _config = config;
-            _userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+            _userManager = userManager;
         }
-        async public Task SeedAsync() {
+        async Task<int> ISampleDataSeeder.SeedAsync() {
             var password = _config.GetSection("Passwords").GetValue<string>("SuperAdmin");
 
             //address table
@@ -553,7 +553,7 @@ namespace PancakeAuthBackend.Data {
             _context.AvailedSubscription.Add(availedSubscription5);
             _context.AvailedSubscription.Add(availedSubscription6);
 
-            await _context.SaveChangesAsync();
+            return await _context.SaveChangesAsync();
         }
     }
 }
