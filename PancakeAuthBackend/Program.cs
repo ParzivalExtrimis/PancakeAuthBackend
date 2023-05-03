@@ -23,6 +23,7 @@ var Configuration = builder.Configuration;
 builder.Services.AddControllers();
 builder.Services.AddTransient<ISchoolService, SchoolService>();
 builder.Services.AddTransient<IAdminService, AdminService>();
+builder.Services.AddTransient<ISampleDataSeeder, SampleDataSeeder>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -30,7 +31,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerDoc();
 
 builder.Services.AddDbContext<BackendDataContext>((options) => {
-    options.UseSqlServer(Configuration.GetConnectionString("Default"));
+    options.UseSqlServer(Configuration.GetConnectionString("azure_sql_auth_store"));
     options.EnableDetailedErrors();
     options.EnableSensitiveDataLogging();
 });
@@ -60,14 +61,11 @@ app.UseCors("AllowAll");
 
 using (var scope = app.Services.CreateScope()) {
     var dbContext = scope.ServiceProvider.GetRequiredService<BackendDataContext>();
-    var Seeder = new SampleDataSeeder(dbContext, scope, Configuration);
 
-    // Seed tables
-    await dbContext.Database.EnsureDeletedAsync();
+  //  await dbContext.Database.EnsureDeletedAsync();
     await dbContext.Database.EnsureCreatedAsync();
-    
+
     await scope.SeedIdentity();
-    await Seeder.SeedAsync();
 };
 
 app.UseAuthentication();
