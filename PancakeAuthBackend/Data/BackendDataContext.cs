@@ -14,15 +14,11 @@ namespace PancakeAuthBackend.Data {
 
         public DbSet<Billing> Payments { get; set; }
         public DbSet<Address> Addresses { get; set; }
-        public DbSet<Batch> Batches { get; set; }
         public DbSet<Chapter> Chapters { get; set; }
-        public DbSet<Grade> Grades { get; set; }
+        public DbSet<Department> Departments { get; set; }
         public DbSet<School> Schools { get; set; }
         public DbSet<Student> Students { get; set; }
         public DbSet<Subject> Subjects { get; set; }
-        public DbSet<Subscription> Subscriptions { get; set; }
-        public DbSet<AvailedSubscription> AvailedSubscription { get; set; }
-        public DbSet<ChaptersIncluded> ChaptersIncluded { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder) {
             base.OnModelCreating(modelBuilder);
@@ -50,15 +46,15 @@ namespace PancakeAuthBackend.Data {
               .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Student>()
-             .HasOne(s => s.Batch)
-             .WithMany(s => s.Students)
-             .HasForeignKey(s => s.BatchId)
-             .OnDelete(DeleteBehavior.SetNull);
+             .HasMany(s => s.Billings)
+             .WithOne(b => b.Student)
+             .HasForeignKey(b => b.StudentId)
+             .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Student>()
-            .HasOne(s => s.Grade)
+            .HasOne(s => s.Department)
             .WithMany(s => s.Students)
-            .HasForeignKey(s => s.GradeId)
+            .HasForeignKey(s => s.DepartmentId)
             .OnDelete(DeleteBehavior.NoAction);
 
 
@@ -68,15 +64,9 @@ namespace PancakeAuthBackend.Data {
              .IsUnique();
 
             modelBuilder.Entity<School>()
-            .HasMany(sch => sch.Payments)
-            .WithOne(s => s.School)
-            .HasForeignKey(s => s.SchoolId)
-            .OnDelete(DeleteBehavior.NoAction);
-
-            modelBuilder.Entity<School>()
               .HasOne(sch => sch.Address)
               .WithOne(s => s.School)
-              .OnDelete(DeleteBehavior.Restrict);
+              .OnDelete(DeleteBehavior.Cascade);
 
             //subject model
             modelBuilder.Entity<Subject>()
@@ -89,19 +79,9 @@ namespace PancakeAuthBackend.Data {
             .HasForeignKey(c => c.SubjectId)
             .OnDelete(DeleteBehavior.Cascade);
 
-            //subscription model
-            modelBuilder.Entity<Subscription>()
-             .HasIndex(subscription => subscription.Name)
-             .IsUnique();
-
-            modelBuilder.Entity<Subscription>()
-              .HasMany(sub => sub.Schools)
-              .WithMany(school => school.Subscriptions)
-              .UsingEntity<AvailedSubscription>();
-
-            //Grade model
-            modelBuilder.Entity<Grade>()
-            .HasIndex(grade => grade.Name)
+            //Department model
+            modelBuilder.Entity<Department>()
+            .HasIndex(d => d.Name)
             .IsUnique();
 
             //Chapter Model
@@ -114,11 +94,6 @@ namespace PancakeAuthBackend.Data {
              .WithMany(sub => sub.Chapters)
              .HasForeignKey(chap => chap.SubjectId)
              .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<Chapter>()
-              .HasMany(ch => ch.Subscriptions)
-              .WithMany(sub => sub.Chapters)
-              .UsingEntity<ChaptersIncluded>();
 
         }
     }

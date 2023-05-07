@@ -38,24 +38,12 @@ namespace PancakeAuthBackend.Controllers {
         }
 
         //GET: school.self.Grade.Students => list
-        [HttpGet("{schoolName}/Students/{GradeName}")]
-        async public Task<IActionResult> ListStudentsByGrade(string schoolName, string GradeName) {
+        [HttpGet("{schoolName}/Students/{department}")]
+        async public Task<IActionResult> ListStudentsByGrade(string schoolName, string department) {
             if (!await _schoolService.SchoolExists(schoolName)) {
                 return new NotFoundObjectResult("School does not exist.");
             }
-            var students = await _schoolService.GetSchoolStudentByGrade(schoolName: schoolName, grade: GradeName);
-            return students.Count > 0
-                ? new OkObjectResult(students)
-                : new NotFoundObjectResult("No Students found.");
-        }
-
-        //GET: school.self.Grade.Students => list
-        [HttpGet("{schoolName}/Students/{BatchName}")]
-        async public Task<IActionResult> ListStudentsByBatch(string schoolName, string BatchName) {
-            if (!await _schoolService.SchoolExists(schoolName)) {
-                return new NotFoundObjectResult("School does not exist.");
-            }
-            var students = await _schoolService.GetSchoolStudentByBatch(schoolName: schoolName, batch: BatchName);
+            var students = await _schoolService.GetSchoolStudentByDepartment(schoolName: schoolName, department: department);
             return students.Count > 0
                 ? new OkObjectResult(students)
                 : new NotFoundObjectResult("No Students found.");
@@ -74,46 +62,21 @@ namespace PancakeAuthBackend.Controllers {
         }
 
         //GET: school.self.Grade.Students.page => list(page)
-        [HttpGet("{schoolName}/Students/{grade}/Paged")]
-        async public Task<IActionResult> ListStudentsByGradePaged(string schoolName, string grade, int pageIndex, int pageSize) {
+        [HttpGet("{schoolName}/Students/{department}/Paged")]
+        async public Task<IActionResult> ListStudentsByGradePaged(string schoolName, string department, int pageIndex, int pageSize) {
             if (!await _schoolService.SchoolExists(schoolName)) {
                 return new NotFoundObjectResult("School does not exist.");
             }
-            var students = await _schoolService.GetSchoolStudentByGradePaged(
-                schoolName: schoolName, grade: grade,
+            var students = await _schoolService.GetSchoolStudentByDepartmentPaged(
+                schoolName: schoolName,
+                department: department,
                 pageIndex, pageSize);
             return students.Count > 0
                 ? new OkObjectResult(students)
                 : new NotFoundObjectResult("No Students found.");
         }
 
-        //GET: school.self.Batc.Students.page => list(page)
-        [HttpGet("{schoolName}/Students/{batch}/Paged")]
-        async public Task<IActionResult> ListStudentsByBatchPaged(string schoolName, string batch, int pageIndex, int pageSize) {
-            if (!await _schoolService.SchoolExists(schoolName)) {
-                return new NotFoundObjectResult("School does not exist.");
-            }
-            var students = await _schoolService.GetSchoolStudentByBatchPaged(
-                schoolName: schoolName, batch: batch,
-                pageIndex, pageSize);
-            return students.Count > 0
-                ? new OkObjectResult(students)
-                : new NotFoundObjectResult("No Students found.");
-        }
-
-        [HttpGet("{schoolName}/Subscriptions")]
-        async public Task<IActionResult> ListSubscriptions(string schoolName) {
-            if (!await _schoolService.SchoolExists(schoolName)) {
-                return new NotFoundObjectResult("School does not exist.");
-            }
-            var subscriptions = await _schoolService.GetSchoolSubscriptions(schoolName);
-            return subscriptions.Count > 0
-                ? new OkObjectResult(subscriptions)
-                : new NotFoundObjectResult("No Subscriptions found.");
-        }
-
-
-        // POST api/<ValuesController>
+        // POST api/<School>
         [HttpPost("{schoolName}/Students")]
         public async Task<IActionResult> AddStudents(string schoolName, [FromBody] StudentDTO[] students) {
             if (!await _schoolService.SchoolExists(schoolName)) {
@@ -134,19 +97,6 @@ namespace PancakeAuthBackend.Controllers {
                 }
                 return new BadRequestObjectResult("Students could not be added. Constraints violated");
             }
-        }
-
-
-        // POST api/<ValuesController>
-        [HttpPost("{schoolName}/Batches")]
-        public async Task<IActionResult> AddBatch(string schoolName, [FromBody] BatchDTO batch) {
-            if (!await _schoolService.SchoolExists(schoolName)) {
-                return new NotFoundObjectResult("School does not exist.");
-            }
-
-            return await _schoolService.AddBatch(batch, schoolName)
-                ? new OkObjectResult("Batch Added Successfully")
-                : new BadRequestObjectResult("Batch could not be added. Provide a correctly formatted JSON.");
         }
 
 

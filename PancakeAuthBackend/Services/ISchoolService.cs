@@ -6,22 +6,12 @@ namespace PancakeAuthBackend.Services {
         Task<bool> SchoolExists(string name);
         Task<SchoolDTO?> GetSchoolData(string name);
         Task<List<StudentDTO>> GetSchoolStudents(string schoolName);
-
-        Task<List<StudentDTO>> GetSchoolStudentByGrade(string schoolName, string grade);
-        Task<List<StudentDTO>> GetSchoolStudentByBatch(string schoolName, string batch);
-
+        Task<List<StudentDTO>> GetSchoolStudentByDepartment(string schoolName, string department);
         Task<List<StudentDTO>> GetSchoolStudentsByPage(string schoolName, int pageIndex, int pageSize);
-        Task<List<StudentDTO>> GetSchoolStudentByGradePaged(string schoolName, string grade, int pageIndex, int pageSize);
-        Task<List<StudentDTO>> GetSchoolStudentByBatchPaged(string schoolName, string batch, int pageIndex, int pageSize);
-
-        Task<List<SubscriptionDTO>> GetSchoolSubscriptions(string schoolName);
-
-        Task<List<BillingDTO>> GetSchoolBillings(string schoolName);
-        Task<List<BillingDTO>> GetSchoolBillingsByPage(string schoolName, int pageIndex, int pageSize);
+        Task<List<StudentDTO>> GetSchoolStudentByDepartmentPaged(string schoolName, string department, int pageIndex, int pageSize);
 
         //POST services 
         Task<bool> AddStudents(string schoolName, List<StudentDTO> studentObjects);
-        Task<bool> AddBatch(BatchDTO batchObj, string schoolName);
 
         //PUT servics
         Task<bool> EditStudent(StudentDTO studentObj,string SSID, string schoolName);

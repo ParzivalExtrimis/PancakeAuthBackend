@@ -11,13 +11,9 @@ namespace PancakeAuthBackend.Models {
         [ForeignKey("CoSMSchoolId")]
         public List<User>? CoSchoolManagers { get; set; } 
         [ForeignKey("ClassManagerSchoolId")]
-        public List<User>? ClassManagers { get; set; } 
+        public List<User>? DepartmentManagers { get; set; } 
         public ICollection<Student>? Students { get; set; }
-        public ICollection<Subscription>? Subscriptions { get; set; }
-        public ICollection<AvailedSubscription>? AvailedSubscriptions { get; set; }
-        public ICollection<Batch>? Batches { get; set; }
         public Address Address { get; set; } = null!;
-        public ICollection<Billing>? Payments { get; set; }
         public int AddressId { get; set; }
     }
 }

@@ -70,151 +70,47 @@ namespace PancakeAuthBackend.Data {
             _context.Schools.Add(school2);
             _context.Schools.Add(school3);
 
-            //billings table 
-
-            var billing1 = new Billing {
-                Status = "Pending",
-                DueDate = DateTime.Now,
-                Amount = 156200,
-                Details = "Billed on 6 subscriptions. First Availed on the date 12/11/22",
-                School = school1
-            };
-            var billing2 = new Billing {
-                Status = "Completed",
-                DueDate = DateTime.Now,
-                Amount = 23900,
-                Details = "Billed on 1 subscription(s). First Availed on the date 09/10/22",
-                School = school1
-            };
-            var billing3 = new Billing {
-                Status = "Pending",
-                DueDate = DateTime.Now,
-                Amount = 78650,
-                Details = "Billed on 4 subscription(s). First Availed on the date 04/12/22",
-                School = school2
-            };
-            var billing4 = new Billing {
-                Status = "Pending",
-                DueDate = DateTime.Now,
-                Amount = 245790,
-                Details = "Billed on 8 subscription(s). First Availed on the date 02/01/23",
-                School = school3
-            };
-            var billing5 = new Billing {
-                Status = "Completed",
-                DueDate = DateTime.Now,
-                Amount = 156200,
-                Details = "Billed on 6 subscriptions. First Availed on the date 01/02/23",
-                School = school3
+            //departments
+            var Oncology = new Department {
+                Name = "Oncology"
             };
 
-            _context.Payments.Add(billing1);
-            _context.Payments.Add(billing2);
-            _context.Payments.Add(billing3);
-            _context.Payments.Add(billing4);
-            _context.Payments.Add(billing5);
-
-            //batches
-
-            var batch1 = new Batch {
-                Name = "5A",
-                School = school1
+            var Opthamology = new Department {
+                Name = "Opthamology"
             };
 
-            var batch2 = new Batch {
-                Name = "7A",
-                School = school1
+            var Cardiology = new Department {
+                Name = "Cardiology"
             };
 
-            var batch3 = new Batch {
-                Name = "2A",
-                School = school2
+            var Pathology = new Department {
+                Name = "Pathology"
             };
 
-            var batch4 = new Batch {
-                Name = "3A",
-                School = school2
+            var Radiology = new Department {
+                Name = "Radiology"
             };
 
-            var batch5 = new Batch {
-                Name = "5B",
-                School = school3
+            var Pediatrics = new Department {
+                Name = "Pediatrics"
             };
 
-            var batch6 = new Batch {
-                Name = "7B",
-                School = school3
+            var Orthopedics = new Department {
+                Name = "Orthopedics"
             };
 
-            _context.Batches.Add(batch1);
-            _context.Batches.Add(batch2);
-            _context.Batches.Add(batch3);
-            _context.Batches.Add(batch4);
-            _context.Batches.Add(batch5);
-            _context.Batches.Add(batch6);
-
-            //grades
-
-            var grade1 = new Grade {
-                Name = "1"
+            var Dermatology = new Department {
+                Name = "Dermatology"
             };
 
-            var grade2 = new Grade {
-                Name = "2"
-            };
-
-            var grade3 = new Grade {
-                Name = "3"
-            };
-
-            var grade4 = new Grade {
-                Name = "4"
-            };
-
-            var grade5 = new Grade {
-                Name = "5"
-            };
-
-            var grade6 = new Grade {
-                Name = "6"
-            };
-
-            var grade7 = new Grade {
-                Name = "7"
-            };
-
-            var grade8 = new Grade {
-                Name = "8"
-            };
-
-            var grade9 = new Grade {
-                Name = "9"
-            };
-
-            var grade10 = new Grade {
-                Name = "10"
-            };
-
-            var grade11 = new Grade {
-                Name = "11"
-            };
-
-            var grade12 = new Grade {
-                Name = "12"
-            };
-
-            _context.Grades.Add(grade1);
-            _context.Grades.Add(grade2);
-            _context.Grades.Add(grade3);
-            _context.Grades.Add(grade4);
-            _context.Grades.Add(grade5);
-            _context.Grades.Add(grade6);
-            _context.Grades.Add(grade7);
-            _context.Grades.Add(grade8);
-            _context.Grades.Add(grade9);
-            _context.Grades.Add(grade10);
-            _context.Grades.Add(grade11);
-            _context.Grades.Add(grade12);
+            await _context.Departments.AddAsync(Oncology);
+            await _context.Departments.AddAsync(Opthamology);
+            await _context.Departments.AddAsync(Cardiology);
+            await _context.Departments.AddAsync(Pathology);
+            await _context.Departments.AddAsync(Radiology);
+            await _context.Departments.AddAsync(Pediatrics);
+            await _context.Departments.AddAsync(Orthopedics);
+            await _context.Departments.AddAsync(Dermatology);
 
             //students - User
             var JonStewart = new User {
@@ -288,8 +184,7 @@ namespace PancakeAuthBackend.Data {
                 StateOfOrigin = "Florida",
                 CountryOfOrigin = "US",
                 Nationality = "American",
-                Batch = batch1,
-                Grade = grade5,
+                Department = Oncology,
                 School = school1,
                 User = JonStewart
             };
@@ -303,8 +198,7 @@ namespace PancakeAuthBackend.Data {
                 StateOfOrigin = "Michigan",
                 CountryOfOrigin = "US",
                 Nationality = "American",
-                Batch = batch3,
-                Grade = grade2,
+                Department = Opthamology,
                 School = school2,
                 User = MillieDyer
             };
@@ -318,8 +212,7 @@ namespace PancakeAuthBackend.Data {
                 StateOfOrigin = "New Jersey",
                 CountryOfOrigin = "US",
                 Nationality = "American",
-                Batch = batch6,
-                Grade = grade7,
+                Department = Radiology,
                 School = school3,
                 User = CoreyBlack
             };
@@ -333,8 +226,7 @@ namespace PancakeAuthBackend.Data {
                 StateOfOrigin = "Arizona",
                 CountryOfOrigin = "US",
                 Nationality = "American",
-                Batch = batch1,
-                Grade = grade5,
+                Department = Dermatology,
                 School = school1,
                 User = DanaWhite
             };
@@ -348,8 +240,7 @@ namespace PancakeAuthBackend.Data {
                 StateOfOrigin = "Florida",
                 CountryOfOrigin = "US",
                 Nationality = "American",
-                Batch = batch1,
-                Grade = grade5,
+                Department = Pathology,
                 School = school1,
                 User = BlakeShelling
             };
@@ -363,8 +254,7 @@ namespace PancakeAuthBackend.Data {
                 StateOfOrigin = "Washington",
                 CountryOfOrigin = "US",
                 Nationality = "American",
-                Batch = batch2,
-                Grade = grade7,
+                Department = Oncology,
                 School = school1,
                 User = NaomiWattson
             };
@@ -376,8 +266,75 @@ namespace PancakeAuthBackend.Data {
             _context.Students.Add(student5);
             _context.Students.Add(student6);
 
-            //subjects
+            //billings table 
 
+            var billing1 = new Billing {
+                Status = "Pending",
+                DueDate = DateTime.Now,
+                Amount = 156200,
+                Details = "Billed on 6 subscriptions. First Availed on the date 12/11/22",
+                Student = student1
+            };
+            var billing2 = new Billing {
+                Status = "Completed",
+                DueDate = DateTime.Now,
+                Amount = 23900,
+                Details = "Billed on 1 subscription(s). First Availed on the date 09/10/22",
+                Student = student1
+            };
+            var billing3 = new Billing {
+                Status = "Pending",
+                DueDate = DateTime.Now,
+                Amount = 78650,
+                Details = "Billed on 4 subscription(s). First Availed on the date 04/12/22",
+                Student = student2
+            };
+            var billing4 = new Billing {
+                Status = "Pending",
+                DueDate = DateTime.Now,
+                Amount = 245790,
+                Details = "Billed on 8 subscription(s). First Availed on the date 02/01/23",
+                Student = student3
+            };
+            var billing5 = new Billing {
+                Status = "Completed",
+                DueDate = DateTime.Now,
+                Amount = 156200,
+                Details = "Billed on 6 subscriptions. First Availed on the date 01/02/23",
+                Student = student3
+            };
+            var billing6 = new Billing {
+                Status = "Completed",
+                DueDate = DateTime.Now,
+                Amount = 12300,
+                Details = "Billed on 5 subscriptions. First Availed on the date 01/02/23",
+                Student = student4
+            };
+            var billing7 = new Billing {
+                Status = "Completed",
+                DueDate = DateTime.Now,
+                Amount = 28900,
+                Details = "Billed on 11 subscriptions. First Availed on the date 01/02/23",
+                Student = student5
+            };
+            var billing8 = new Billing {
+                Status = "Completed",
+                DueDate = DateTime.Now,
+                Amount = 9870,
+                Details = "Billed on 1 subscriptions. First Availed on the date 01/02/23",
+                Student = student6
+            };
+
+            _context.Payments.Add(billing1);
+            _context.Payments.Add(billing2);
+            _context.Payments.Add(billing3);
+            _context.Payments.Add(billing4);
+            _context.Payments.Add(billing5);
+            _context.Payments.Add(billing6);
+            _context.Payments.Add(billing7);
+            _context.Payments.Add(billing8);
+
+            //subjects
             var subject1 = new Subject {
                 Name = "Physics"
             };
@@ -393,30 +350,6 @@ namespace PancakeAuthBackend.Data {
             _context.Subjects.Add(subject1);
             _context.Subjects.Add(subject2);
             _context.Subjects.Add(subject3);
-
-            //Subscriptions
-
-            var subscription1 = new Subscription {
-                Type = "Included",
-                Name = "Default",
-                Description = "Standard Subscription"
-            };
-
-            var subscription2 = new Subscription {
-                Type = "Add-On",
-                Name = "Math Magic",
-                Description = "Added Modules for Math"
-            };
-
-            var subscription3 = new Subscription {
-                Type = "Add-On",
-                Name = "Physics Booster",
-                Description = "Added Modules for Physics"
-            };
-
-            _context.Subscriptions.Add(subscription1);
-            _context.Subscriptions.Add(subscription2);
-            _context.Subscriptions.Add(subscription3);
 
             //Chapters
 
@@ -462,96 +395,6 @@ namespace PancakeAuthBackend.Data {
             _context.Chapters.Add(chapter4);
             _context.Chapters.Add(chapter5);
             _context.Chapters.Add(chapter6);
-
-            //Add Chapters to Subscriptions
-
-            var chaptersIncluded1 = new ChaptersIncluded {
-                Subscription = subscription1,
-                Chapter = chapter1
-            };
-
-            var chaptersIncluded2 = new ChaptersIncluded {
-                Subscription = subscription1,
-                Chapter = chapter4
-            };
-
-            var chaptersIncluded3 = new ChaptersIncluded {
-                Subscription = subscription1,
-                Chapter = chapter6
-            };
-
-            var chaptersIncluded4 = new ChaptersIncluded {
-                Subscription = subscription2,
-                Chapter = chapter4
-            };
-
-            var chaptersIncluded5 = new ChaptersIncluded {
-                Subscription = subscription2,
-                Chapter = chapter5
-            };
-
-            var chaptersIncluded6 = new ChaptersIncluded {
-                Subscription = subscription3,
-                Chapter = chapter1
-            };
-
-            var chaptersIncluded7 = new ChaptersIncluded {
-                Subscription = subscription3,
-                Chapter = chapter2
-            };
-
-            var chaptersIncluded8 = new ChaptersIncluded {
-                Subscription = subscription3,
-                Chapter = chapter3
-            };
-
-            _context.ChaptersIncluded.Add(chaptersIncluded1);
-            _context.ChaptersIncluded.Add(chaptersIncluded2);
-            _context.ChaptersIncluded.Add(chaptersIncluded3);
-            _context.ChaptersIncluded.Add(chaptersIncluded4);
-            _context.ChaptersIncluded.Add(chaptersIncluded5);
-            _context.ChaptersIncluded.Add(chaptersIncluded6);
-            _context.ChaptersIncluded.Add(chaptersIncluded7);
-            _context.ChaptersIncluded.Add(chaptersIncluded8);
-
-            //Add subscriptions to school
-
-            var availedSubscription1 = new AvailedSubscription {
-                School = school1,
-                Subscription = subscription1
-            };
-
-            var availedSubscription2 = new AvailedSubscription {
-                School = school1,
-                Subscription = subscription2
-            };
-
-            var availedSubscription3 = new AvailedSubscription {
-                School = school1,
-                Subscription = subscription3
-            };
-
-            var availedSubscription4 = new AvailedSubscription {
-                School = school2,
-                Subscription = subscription1
-            };
-
-            var availedSubscription5 = new AvailedSubscription {
-                School = school2,
-                Subscription = subscription2
-            };
-
-            var availedSubscription6 = new AvailedSubscription {
-                School = school3,
-                Subscription = subscription1
-            };
-
-            _context.AvailedSubscription.Add(availedSubscription1);
-            _context.AvailedSubscription.Add(availedSubscription2);
-            _context.AvailedSubscription.Add(availedSubscription3);
-            _context.AvailedSubscription.Add(availedSubscription4);
-            _context.AvailedSubscription.Add(availedSubscription5);
-            _context.AvailedSubscription.Add(availedSubscription6);
 
             return await _context.SaveChangesAsync();
         }

@@ -30,11 +30,14 @@ builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerDoc();
 
+var connectionString = Configuration.GetSection("ConnectionStrings").GetValue<string>("azure_sql_auth_store");
+
 builder.Services.AddDbContext<BackendDataContext>((options) => {
-    options.UseSqlServer(Configuration.GetConnectionString("azure_sql_auth_store"));
+    options.UseSqlServer(connectionString);
     options.EnableDetailedErrors();
     options.EnableSensitiveDataLogging();
 });
+
 
 builder.Services.ConfigureJWTAuthentication(Configuration);
 
@@ -50,10 +53,8 @@ builder.Services.ConfigureAuthorization();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment()) {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 

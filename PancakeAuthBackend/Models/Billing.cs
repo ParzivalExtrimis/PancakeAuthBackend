@@ -12,7 +12,7 @@ namespace PancakeAuthBackend.Models {
 
         [Column(TypeName = "varchar(200)")]
         public string? Details { get; set; }
-        public School School { get; set; } = null!;
-        public int SchoolId { get; set; }
+        public Student Student { get; set; } = null!;
+        public int StudentId { get; set; }
     }
 }

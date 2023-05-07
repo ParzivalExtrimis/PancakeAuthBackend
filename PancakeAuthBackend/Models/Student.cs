@@ -31,11 +31,10 @@ namespace PancakeAuthBackend.Models {
 
         [Column(TypeName = "varchar(50)")]
         public string Nationality { get; set; } = null!;
-        public Batch? Batch { get; set; }
-        public int? BatchId { get; set; }
-        public Grade Grade { get; set; } = null!;
-        public int GradeId { get; set; }
+        public Department Department { get; set; } = null!;
+        public int DepartmentId { get; set; }
         public School School { get; set; } = null!;
         public int SchoolId { get; set; }
+        public ICollection<Billing>? Billings { get; set; }
     }
 }

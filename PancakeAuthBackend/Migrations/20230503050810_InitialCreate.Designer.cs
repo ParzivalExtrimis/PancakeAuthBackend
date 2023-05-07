@@ -12,8 +12,8 @@ using PancakeAuthBackend.Data;
 namespace PancakeAuthBackend.Migrations
 {
     [DbContext(typeof(BackendDataContext))]
-    [Migration("20230501054928_UnseedingThroughMigration")]
-    partial class UnseedingThroughMigration
+    [Migration("20230503050810_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -195,43 +195,6 @@ namespace PancakeAuthBackend.Migrations
                     b.ToTable("Addresses");
                 });
 
-            modelBuilder.Entity("PancakeAuthBackend.Models.AvailedSubscription", b =>
-                {
-                    b.Property<int>("SchoolId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SubscriptionId")
-                        .HasColumnType("int");
-
-                    b.HasKey("SchoolId", "SubscriptionId");
-
-                    b.HasIndex("SubscriptionId");
-
-                    b.ToTable("AvailedSubscription");
-                });
-
-            modelBuilder.Entity("PancakeAuthBackend.Models.Batch", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("varchar(100)");
-
-                    b.Property<int>("SchoolId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SchoolId");
-
-                    b.ToTable("Batches");
-                });
-
             modelBuilder.Entity("PancakeAuthBackend.Models.Billing", b =>
                 {
                     b.Property<int>("Id")
@@ -249,16 +212,16 @@ namespace PancakeAuthBackend.Migrations
                     b.Property<DateTime>("DueDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("SchoolId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("varchar(50)");
 
+                    b.Property<int>("StudentId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("SchoolId");
+                    b.HasIndex("StudentId");
 
                     b.ToTable("Payments");
                 });
@@ -292,22 +255,7 @@ namespace PancakeAuthBackend.Migrations
                     b.ToTable("Chapters");
                 });
 
-            modelBuilder.Entity("PancakeAuthBackend.Models.ChaptersIncluded", b =>
-                {
-                    b.Property<int>("ChapterId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SubscriptionId")
-                        .HasColumnType("int");
-
-                    b.HasKey("ChapterId", "SubscriptionId");
-
-                    b.HasIndex("SubscriptionId");
-
-                    b.ToTable("ChaptersIncluded");
-                });
-
-            modelBuilder.Entity("PancakeAuthBackend.Models.Grade", b =>
+            modelBuilder.Entity("PancakeAuthBackend.Models.Department", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -324,7 +272,7 @@ namespace PancakeAuthBackend.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Grades");
+                    b.ToTable("Departments");
                 });
 
             modelBuilder.Entity("PancakeAuthBackend.Models.School", b =>
@@ -366,9 +314,6 @@ namespace PancakeAuthBackend.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("BatchId")
-                        .HasColumnType("int");
-
                     b.Property<string>("CityOfOrigin")
                         .IsRequired()
                         .HasColumnType("varchar(100)");
@@ -377,12 +322,12 @@ namespace PancakeAuthBackend.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(50)");
 
+                    b.Property<int>("DepartmentId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("varchar(50)");
-
-                    b.Property<int>("GradeId")
-                        .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -408,17 +353,14 @@ namespace PancakeAuthBackend.Migrations
                         .HasColumnType("varchar(50)");
 
                     b.Property<string>("UserId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BatchId");
+                    b.HasIndex("DepartmentId");
 
                     b.HasIndex("Email")
                         .IsUnique();
-
-                    b.HasIndex("GradeId");
 
                     b.HasIndex("PhoneNumber")
                         .IsUnique();
@@ -451,34 +393,6 @@ namespace PancakeAuthBackend.Migrations
                         .IsUnique();
 
                     b.ToTable("Subjects");
-                });
-
-            modelBuilder.Entity("PancakeAuthBackend.Models.Subscription", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("varchar(200)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("varchar(100)");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("varchar(50)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Name")
-                        .IsUnique();
-
-                    b.ToTable("Subscriptions");
                 });
 
             modelBuilder.Entity("PancakeAuthBackend.Models.User", b =>
@@ -537,6 +451,9 @@ namespace PancakeAuthBackend.Migrations
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
+
+                    b.Property<string>("ProfilePicture")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
@@ -618,45 +535,15 @@ namespace PancakeAuthBackend.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("PancakeAuthBackend.Models.AvailedSubscription", b =>
-                {
-                    b.HasOne("PancakeAuthBackend.Models.School", "School")
-                        .WithMany("AvailedSubscriptions")
-                        .HasForeignKey("SchoolId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("PancakeAuthBackend.Models.Subscription", "Subscription")
-                        .WithMany("AvailedSchools")
-                        .HasForeignKey("SubscriptionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("School");
-
-                    b.Navigation("Subscription");
-                });
-
-            modelBuilder.Entity("PancakeAuthBackend.Models.Batch", b =>
-                {
-                    b.HasOne("PancakeAuthBackend.Models.School", "School")
-                        .WithMany("Batches")
-                        .HasForeignKey("SchoolId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("School");
-                });
-
             modelBuilder.Entity("PancakeAuthBackend.Models.Billing", b =>
                 {
-                    b.HasOne("PancakeAuthBackend.Models.School", "School")
-                        .WithMany("Payments")
-                        .HasForeignKey("SchoolId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                    b.HasOne("PancakeAuthBackend.Models.Student", "Student")
+                        .WithMany("Billings")
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("School");
+                    b.Navigation("Student");
                 });
 
             modelBuilder.Entity("PancakeAuthBackend.Models.Chapter", b =>
@@ -670,31 +557,12 @@ namespace PancakeAuthBackend.Migrations
                     b.Navigation("Subject");
                 });
 
-            modelBuilder.Entity("PancakeAuthBackend.Models.ChaptersIncluded", b =>
-                {
-                    b.HasOne("PancakeAuthBackend.Models.Chapter", "Chapter")
-                        .WithMany("IncludedInSubscriptions")
-                        .HasForeignKey("ChapterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("PancakeAuthBackend.Models.Subscription", "Subscription")
-                        .WithMany("IncludedChapters")
-                        .HasForeignKey("SubscriptionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Chapter");
-
-                    b.Navigation("Subscription");
-                });
-
             modelBuilder.Entity("PancakeAuthBackend.Models.School", b =>
                 {
                     b.HasOne("PancakeAuthBackend.Models.Address", "Address")
                         .WithOne("School")
                         .HasForeignKey("PancakeAuthBackend.Models.School", "AddressId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("PancakeAuthBackend.Models.User", "SchoolManager")
@@ -708,14 +576,9 @@ namespace PancakeAuthBackend.Migrations
 
             modelBuilder.Entity("PancakeAuthBackend.Models.Student", b =>
                 {
-                    b.HasOne("PancakeAuthBackend.Models.Batch", "Batch")
+                    b.HasOne("PancakeAuthBackend.Models.Department", "Department")
                         .WithMany("Students")
-                        .HasForeignKey("BatchId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("PancakeAuthBackend.Models.Grade", "Grade")
-                        .WithMany("Students")
-                        .HasForeignKey("GradeId")
+                        .HasForeignKey("DepartmentId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
@@ -727,13 +590,9 @@ namespace PancakeAuthBackend.Migrations
 
                     b.HasOne("PancakeAuthBackend.Models.User", "User")
                         .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UserId");
 
-                    b.Navigation("Batch");
-
-                    b.Navigation("Grade");
+                    b.Navigation("Department");
 
                     b.Navigation("School");
 
@@ -742,12 +601,12 @@ namespace PancakeAuthBackend.Migrations
 
             modelBuilder.Entity("PancakeAuthBackend.Models.User", b =>
                 {
-                    b.HasOne("PancakeAuthBackend.Models.Grade", null)
-                        .WithMany("ClassManager")
+                    b.HasOne("PancakeAuthBackend.Models.Department", null)
+                        .WithMany("HOD")
                         .HasForeignKey("ClassManagerGradeId");
 
                     b.HasOne("PancakeAuthBackend.Models.School", null)
-                        .WithMany("ClassManagers")
+                        .WithMany("DepartmentManagers")
                         .HasForeignKey("ClassManagerSchoolId");
 
                     b.HasOne("PancakeAuthBackend.Models.School", null)
@@ -760,48 +619,30 @@ namespace PancakeAuthBackend.Migrations
                     b.Navigation("School");
                 });
 
-            modelBuilder.Entity("PancakeAuthBackend.Models.Batch", b =>
+            modelBuilder.Entity("PancakeAuthBackend.Models.Department", b =>
                 {
-                    b.Navigation("Students");
-                });
-
-            modelBuilder.Entity("PancakeAuthBackend.Models.Chapter", b =>
-                {
-                    b.Navigation("IncludedInSubscriptions");
-                });
-
-            modelBuilder.Entity("PancakeAuthBackend.Models.Grade", b =>
-                {
-                    b.Navigation("ClassManager");
+                    b.Navigation("HOD");
 
                     b.Navigation("Students");
                 });
 
             modelBuilder.Entity("PancakeAuthBackend.Models.School", b =>
                 {
-                    b.Navigation("AvailedSubscriptions");
-
-                    b.Navigation("Batches");
-
-                    b.Navigation("ClassManagers");
-
                     b.Navigation("CoSchoolManagers");
 
-                    b.Navigation("Payments");
+                    b.Navigation("DepartmentManagers");
 
                     b.Navigation("Students");
+                });
+
+            modelBuilder.Entity("PancakeAuthBackend.Models.Student", b =>
+                {
+                    b.Navigation("Billings");
                 });
 
             modelBuilder.Entity("PancakeAuthBackend.Models.Subject", b =>
                 {
                     b.Navigation("Chapters");
-                });
-
-            modelBuilder.Entity("PancakeAuthBackend.Models.Subscription", b =>
-                {
-                    b.Navigation("AvailedSchools");
-
-                    b.Navigation("IncludedChapters");
                 });
 #pragma warning restore 612, 618
         }

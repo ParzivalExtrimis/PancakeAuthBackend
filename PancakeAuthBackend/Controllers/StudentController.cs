@@ -32,13 +32,13 @@ namespace PancakeAuthBackend.Controllers {
             var student = await _db.Students
                 .Where(s => s.StudentUID == ssid)
                 .Include(s => s.School)
-                .Include(s => s.Grade)
-                .Include(s => s.Batch)
+                .Include(s => s.Department)
                 .Include(s => s.User)
                 .Select(s => new StudentDTO {
                     StudentUID = s.StudentUID,
                     FirstName = s.User.FirstName,
                     LastName = s.User.LastName,
+                    ProfilePicture = s.User.ProfilePicture,
                     Name = s.Name,
                     Email = s.Email,
                     PhoneNumber = s.PhoneNumber,
@@ -47,8 +47,7 @@ namespace PancakeAuthBackend.Controllers {
                     CountryOfOrigin = s.CountryOfOrigin,
                     Nationality = s.Nationality,
                     School = s.School.Name,
-                    Grade = s.Grade.Name,
-                    Batch = s.Batch != null ? s.Batch.Name : "None"
+                    Department = s.Department.Name,
                 })
                 .FirstOrDefaultAsync();
 

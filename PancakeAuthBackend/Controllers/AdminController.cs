@@ -40,7 +40,7 @@ namespace PancakeAuthBackend.Controllers {
 
         //POST school
         [HttpPost("School")]
-        async public Task<IActionResult> AddSchool([FromBody] SchoolDTO school) {
+        async public Task<IActionResult> AddSchool([FromBody] RegisterSchoolDTO school) {
 
             try {
                 return await _AdminService.AddSchool(school)
@@ -93,73 +93,6 @@ namespace PancakeAuthBackend.Controllers {
                 : new BadRequestObjectResult($"School [ {schoolName} ] could not be Deleted. Provide a correctly formatted JSON.");
         }
 
-
-        //--------------------------------Subscriptions-------------------------------------------------
-
-        //GET subscriptions
-        [HttpGet("Subscriptions")]
-        async public Task<IActionResult> GetSubscriptions() {
-            var subscriptions = await _AdminService.GetSubscriptions();
-            if (subscriptions.Count == 0) {
-                return new NotFoundObjectResult("No Subscriptions Found.");
-            }
-            return new OkObjectResult(subscriptions);
-        }
-
-        [HttpGet("Subscriptions/Paged")]
-        async public Task<IActionResult> GetSubscriptionsByPage(int pageIndex, int pageSize) {
-            var subscriptions = await _AdminService.GetSubscriptionsByPage(pageIndex, pageSize);
-            if (subscriptions.Count == 0) {
-                return new NotFoundObjectResult("No Subscriptions Found.");
-            }
-            return new OkObjectResult(subscriptions);
-        }
-
-        //POST school
-        [HttpPost("Subscriptions")]
-        async public Task<IActionResult> AddSubscription([FromBody] SubscriptionDTO subscription) {
-
-            try {
-                return await _AdminService.AddSubscription(subscription)
-                    ? new OkObjectResult($"Subscription [{subscription.Name}] Added Successfully")
-                    : new BadRequestObjectResult($"Subscription [{subscription.Name}] could NOT be added. Check parameters are correct.");
-            }
-            catch (DbUpdateException ex) {
-                // Handle the exception
-                if (ex.InnerException is SqlException sqlEx && sqlEx.Number == 2601) {
-                    string errorMessage = $"Failed: {sqlEx.Message}";
-                    return new BadRequestObjectResult(errorMessage);
-                }
-                return new BadRequestObjectResult($"Subscription [{subscription.Name}] could NOT be added. Constraints violated");
-            }
-        }
-
-        //EDIT School
-        [HttpPut("Subscriptions/{subscriptionName}")]
-        public async Task<IActionResult> EditSubscription(string subscriptionName, [FromBody] SubscriptionDTO subscription) {
-            try {
-                return await _AdminService.UpdateSubscription(subscriptionName, subscription)
-              ? new OkObjectResult("Subscription Updated Successfully")
-              : new BadRequestObjectResult("Subscription could not be updated. Provide a correctly formatted JSON.");
-            }
-            catch (DbUpdateException ex) {
-                // Handle the exception
-                if (ex.InnerException is SqlException sqlEx && sqlEx.Number == 2601) {
-                    string errorMessage = $"Failed: {sqlEx.Message}";
-                    return new BadRequestObjectResult(errorMessage);
-                }
-                return new BadRequestObjectResult($"Subscription could not be updated. Constraints violated \n {ex.Message}" +
-                    $"\n {(ex.InnerException ?? ex).Message}");
-            }
-        }
-
-        //DELETE school
-        [HttpDelete("Subscription/{subscriptionName}")]
-        async public Task<IActionResult> DeleteSubscription(string subscriptionName) {
-            return await _AdminService.DeleteSubscription(subscriptionName)
-                ? new OkObjectResult($"Subscription [ {subscriptionName} ] Deleted Successfully.")
-                : new BadRequestObjectResult($"Subscription [ {subscriptionName} ] could not be Deleted. Provide a correctly formatted JSON.");
-        }
 
         //--------------------------------Chapters-------------------------------------------------
 

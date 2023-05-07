@@ -1,31 +1,21 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using PancakeAuthBackend.Models;
 using System.Net.WebSockets;
 using System.Reflection.Metadata.Ecma335;
+using System.Security.Claims;
 
 namespace PancakeAuthBackend.Services {
     public class AdminService : IAdminService {
         readonly BackendDataContext _context;
+        readonly UserManager<User> _user;
+        readonly ILogger<AdminService> _log;
 
-        public AdminService(BackendDataContext context) {
+        public AdminService(BackendDataContext context, UserManager<User> user, ILogger<AdminService> log) {
             _context = context;
-        }
-
-        //Util
-        async Task<List<Subscription>> GetSubscriptionsByName(ICollection<string> subNames) {
-            var subsWithoutNullCheck = new List<Subscription?>();
-            foreach (var subName in subNames) {
-                subsWithoutNullCheck.Add(
-                       await _context.Subscriptions
-                       .FirstOrDefaultAsync(Subscription => Subscription.Name == subName)
-                    );
-            }
-            var subs = subsWithoutNullCheck
-                .Where(subs => subs != null)
-                .Select(subs => subs!)
-                .ToList();
-            return subs;
+            _user = user;
+            _log = log;
         }
 
         //*************************************************************************************************************
@@ -43,24 +33,22 @@ namespace PancakeAuthBackend.Services {
 
         //services
 
-        async Task<bool> IAdminService.AddSchool(SchoolDTO school) {
-            var subscriptions = await GetSubscriptionsByName(school.Subscriptions);
+        async Task<bool> IAdminService.AddSchool(RegisterSchoolDTO school) {
 
-            if (subscriptions.Count == 0) {
-                if (!_context.Subscriptions.IsNullOrEmpty()) { 
-                    subscriptions = new List<Subscription> {
-                        await _context.Subscriptions
-                            .FirstAsync()
-                    };
-                }
-                else {
-                    return false;
-                }
-            }
+            var user = new User {
+                FirstName = school.ManagerFirstName,
+                LastName = school.ManagerLastName,
+                Email = school.ManagerEmail,
+                PhoneNumber = school.ManagerPhone,
+                ProfilePicture = school.ManagerPicture,
+            };
+
+            await _user.CreateAsync(user, school.ManagerPassword);
+            await _user.AddToRoleAsync(user, "SchoolManager");
+            await _user.AddClaimAsync(user, new Claim("School", school.Name));
 
             var School = new School {
                 Name = school.Name,
-                Subscriptions = subscriptions,
 
                 Address = new Address {
                     StreetName = school.StreetName,
@@ -69,7 +57,8 @@ namespace PancakeAuthBackend.Services {
                     State = school.State,
                     Country = school.Country,
                     PostalCode = school.PostalCode,
-                }
+                },
+                SchoolManager = user
             };
             await _context.Schools.AddAsync(School);
             await _context.SaveChangesAsync();
@@ -78,16 +67,15 @@ namespace PancakeAuthBackend.Services {
 
         async Task<bool> IAdminService.DeleteSchool(string schoolName) {
             var school = await _context.Schools
-                .Include(sc => sc.Subscriptions)
                 .SingleOrDefaultAsync(school => school.Name == schoolName);
 
             if (school == null) {
                 return false;
             }
 
-            var students = _context.Students
+            var students = await _context.Students
                 .Where(s => s.SchoolId == school.Id)
-                .ToList();
+                .ToListAsync();
 
             if(students is not null) {
                 _context.Students.RemoveRange(students);
@@ -101,7 +89,6 @@ namespace PancakeAuthBackend.Services {
 
         async Task<bool> IAdminService.EditSchool(string schoolName, SchoolDTO schoolObj) {
             var school = await _context.Schools
-                .Include(sc => sc.Subscriptions)
                 .FirstOrDefaultAsync(school => school.Name == schoolName);
 
             if (school == null) {
@@ -128,7 +115,7 @@ namespace PancakeAuthBackend.Services {
                 school.Name = schoolObj.Name;
             }
             catch (Exception ex) {
-                Console.WriteLine(ex.Message);
+                _log.LogError("Edit School Failed: {0}", ex.Message);
                 return false;
             }
 
@@ -140,7 +127,6 @@ namespace PancakeAuthBackend.Services {
             var schools = new List<SchoolDTO>();
             var schoolRecords = await _context.Schools
                 .Include(sc => sc.Address)
-                .Include(sch => sch.Subscriptions)
                 .ToListAsync();
 
             if (schoolRecords is null) {
@@ -151,15 +137,9 @@ namespace PancakeAuthBackend.Services {
                 if (record is null) {
                     continue;
                 }
-                //get subscriptions list
-                var subscipts = new List<string>();
-                foreach (var subsc in record.Subscriptions ?? new List<Subscription>()) {
-                    subscipts.Add(subsc.Name);
-                }
 
                 var school = new SchoolDTO {
                     Name = record.Name,
-                    Subscriptions = subscipts,
                     StreetName = record.Address.StreetName,
                     City = record.Address.City,
                     Region = record.Address.Region,
@@ -176,80 +156,6 @@ namespace PancakeAuthBackend.Services {
             var schools = new List<SchoolDTO>();
             var schoolRecords = await _context.Schools
                 .Include(sc => sc.Address)
-                .Include(sch => sch.Subscriptions)
-                .Skip((pageIndex - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-
-            if (schoolRecords is null) {
-                return schools;
-            }
-
-            foreach (var record in schoolRecords) {
-                if (record is null) {
-                    continue;
-                }
-                //get subscriptions list
-                var subscipts = new List<string>();
-                foreach (var subsc in record.Subscriptions ?? new List<Subscription>()) {
-                    subscipts.Add(subsc.Name);
-                }
-
-                var school = new SchoolDTO {
-                    Name = record.Name,
-                    Subscriptions = subscipts,
-                    StreetName = record.Address.StreetName,
-                    City = record.Address.City,
-                    Region = record.Address.Region,
-                    State = record.Address.State,
-                    PostalCode = record.Address.PostalCode,
-                    Country = record.Address.Country
-                };
-                schools.Add(school);
-            }
-            return schools;
-        }
-
-        async Task<List<SchoolDTO>> IAdminService.GetSchoolsForSubscription(string subscriptionName) {
-            var schools = new List<SchoolDTO>();
-            var schoolRecords = await _context.Schools
-                .Include(sc => sc.Address)
-                .Include(sch => sch.Subscriptions)
-                .Where(school => school.Subscriptions != null && school.Subscriptions!
-                    .Any(subscription => subscription.Name == subscriptionName))
-                .ToListAsync();
-
-            if (schoolRecords is null) {
-                return schools;
-            }
-
-            foreach (var record in schoolRecords) {
-                if (record is null) {
-                    continue;
-                }
-
-                var school = new SchoolDTO {
-                    Name = record.Name,
-                    Subscriptions = new List<string>(),
-                    StreetName = record.Address.StreetName,
-                    City = record.Address.City,
-                    Region = record.Address.Region,
-                    State = record.Address.State,
-                    PostalCode = record.Address.PostalCode,
-                    Country = record.Address.Country
-                };
-                schools.Add(school);
-            }
-            return schools;
-        }
-
-        async Task<List<SchoolDTO>> IAdminService.GetSchoolsForSubscriptionByPage(string subscriptionName, int pageIndex, int pageSize) {
-            var schools = new List<SchoolDTO>();
-            var schoolRecords = await _context.Schools
-                .Include(sc => sc.Address)
-                .Include(sch => sch.Subscriptions)
-                .Where(school => school.Subscriptions != null && school.Subscriptions!
-                    .Any(subscription => subscription.Name == subscriptionName))
                 .Skip((pageIndex - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
@@ -265,7 +171,6 @@ namespace PancakeAuthBackend.Services {
 
                 var school = new SchoolDTO {
                     Name = record.Name,
-                    Subscriptions = new List<string>(),
                     StreetName = record.Address.StreetName,
                     City = record.Address.City,
                     Region = record.Address.Region,
@@ -276,123 +181,6 @@ namespace PancakeAuthBackend.Services {
                 schools.Add(school);
             }
             return schools;
-        }
-
-        async Task<List<SubscriptionDTO>> IAdminService.GetSubscriptions() {
-            var subscriptionRecords = await _context.Subscriptions
-                .Include(sub => sub.Chapters)
-                .Select(record => new SubscriptionDTO {
-                    Type = record.Type,
-                    Name = record.Name,
-                    Description = record.Description,
-                    IncludedChapters = record.Chapters
-                            .Select(x => x.Title)
-                            .ToList()
-                })
-                .ToListAsync();
-
-            return subscriptionRecords ?? new List<SubscriptionDTO>();
-        }
-
-        async Task<List<SubscriptionDTO>> IAdminService.GetSubscriptionsByPage(int pageIndex, int pageSize) {
-            var subscriptionRecords = await _context.Subscriptions
-                 .Include(sub => sub.Chapters)
-                 .Select(record => new SubscriptionDTO {
-                     Type = record.Type,
-                     Name = record.Name,
-                     Description = record.Description,
-                     IncludedChapters = record.Chapters
-                             .Select(x => x.Title)
-                             .ToList()
-                 })
-                 .Skip((pageIndex - 1) * pageSize)
-                 .Take(pageSize)
-                 .ToListAsync();
-
-            return subscriptionRecords ?? new List<SubscriptionDTO>();
-        }
-
-        async Task<SubscriptionDTO?> IAdminService.FindSubscription(string name) {
-            return await _context.Subscriptions
-                .Include(s => s.IncludedChapters)
-                .Where(sub => sub.Name == name)
-                .Select(subscription => new SubscriptionDTO {
-                    Type = subscription!.Type,
-                    Name = subscription!.Name,
-                    Description = subscription!.Description,
-                    IncludedChapters = subscription.Chapters
-                            .Select(c => c.Title).ToList()
-                })
-                .FirstOrDefaultAsync();
-        }
-
-        async Task<bool> IAdminService.AddSubscription(SubscriptionDTO subscription) {
-
-            //get chapters
-            var chapters = new List<Chapter>();
-            foreach (var chap in subscription.IncludedChapters) {
-                var chapter = await _context.Chapters
-                    .FirstOrDefaultAsync(c => c.Title == chap);
-                if (chapter is not null) {
-                    chapters.Add(chapter);
-                }
-            }
-
-            var sub = new Subscription {
-                Type = subscription.Type,
-                Name = subscription.Name,
-                Description = subscription.Description,
-                Chapters = chapters
-            };
-
-            await _context.Subscriptions.AddAsync(sub);
-            await _context.SaveChangesAsync();
-            return true;
-        }
-
-        async Task<bool> IAdminService.UpdateSubscription(string subscriptionName, SubscriptionDTO subscription) {
-
-            //get chapters
-            var chapters = new List<Chapter>();
-            foreach (var chap in subscription.IncludedChapters) {
-                var chapter = await _context.Chapters
-                    .FirstOrDefaultAsync(c => c.Title == chap);
-                if (chapter is not null) {
-                    chapters.Add(chapter);
-                }
-            }
-
-            //find subscription
-            var sub = await _context.Subscriptions
-                .Include(subsc => subsc.IncludedChapters)
-                .FirstOrDefaultAsync(s => s.Name == subscriptionName);
-            if(sub is null) {
-                return false;
-            }
-            //replace chapters
-   
-            sub.Chapters = new List<Chapter>();
-
-            sub.Name = subscription.Name;
-            sub.Type = subscription.Type;
-            sub.Description = subscription.Description;
-            sub.Chapters = chapters;
-
-            await _context.SaveChangesAsync();
-            return true;
-        }
-
-        async Task<bool> IAdminService.DeleteSubscription(string subscriptionName) {
-            var subscription = await _context.Subscriptions
-                .FirstOrDefaultAsync(s => s.Name == subscriptionName);
-
-            if (subscription is null) {
-                return false;
-            }
-
-            _context.Subscriptions.Remove(subscription);
-            await _context.SaveChangesAsync();
-            return true;
         }
 
         List<ChapterDTO> IAdminService.GetChapters() {
@@ -498,62 +286,34 @@ namespace PancakeAuthBackend.Services {
             return false;
         }
 
-        List<SubjectDetailsDTO> IAdminService.GetSubjects() {
-            var subjects = _context.Subjects
-                .Include(c => c.Chapters)
-                .AsNoTracking()
-                .ToList();
-
-            var subjectObjs = new List<SubjectDetailsDTO>();
-            foreach (var subject in subjects) {
-                var chapterObjs = new List<ChapterDTO>();
-                if(subject.Chapters is not null) {
-                    foreach (var chapter in subject.Chapters) {
-                        chapterObjs.Add(
-                            new ChapterDTO {
-                                Title = chapter.Title,
-                                Description = chapter.Description
-                            });
-                    }
-                }
-              
-                subjectObjs.Add(
-                new SubjectDetailsDTO {
-                    Name = subject.Name,
-                    Chapters = chapterObjs
-                });
-            }
-            return subjectObjs;
+        async Task<List<ChapterDTO>> IAdminService.GetChaptersBySubject(string sub) {
+            return await _context.Chapters
+                .Include(c => c.Subject)
+                .Where(c => c.Subject.Name == sub)
+                .Select(chapter => new ChapterDTO {
+                    Title = chapter.Title,
+                    Description = chapter.Description
+                })
+                .ToListAsync()
+                ?? new List<ChapterDTO>();
         }
 
-        List<SubjectDetailsDTO> IAdminService.GetSubjectsByPage(int pageIndex, int pageSize) {
-            var subjects = _context.Subjects
-                .Include(c => c.Chapters)
+        async Task<List<SubjectDTO>> IAdminService.GetSubjects() {
+            return await _context.Subjects
+                .Select(s => new SubjectDTO {
+                    Name = s.Name
+                })
+                .ToListAsync();
+        }
+
+        async Task<List<SubjectDTO>> IAdminService.GetSubjectsByPage(int pageIndex, int pageSize) {
+            return await _context.Subjects
                 .Skip((pageIndex - 1) * pageSize)
                 .Take(pageSize)
-                .AsNoTracking()
-                .ToList();
-
-            var subjectObjs = new List<SubjectDetailsDTO>();
-            foreach (var subject in subjects) {
-                var chapterObjs = new List<ChapterDTO>();
-                if (subject.Chapters is not null) {
-                    foreach (var chapter in subject.Chapters) {
-                        chapterObjs.Add(
-                            new ChapterDTO {
-                                Title = chapter.Title,
-                                Description = chapter.Description
-                            });
-                    }
-                }
-
-                subjectObjs.Add(
-                new SubjectDetailsDTO {
-                    Name = subject.Name,
-                    Chapters = chapterObjs
-                });
-            }
-            return subjectObjs;
+                .Select(s => new SubjectDTO {
+                    Name = s.Name
+                })
+                .ToListAsync();
         }
 
         async Task IAdminService.AddSubjects(List<SubjectDTO> subs) {
